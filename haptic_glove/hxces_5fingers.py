@@ -15,6 +15,18 @@ import math
 from math import pi
 import pyfirmata
 
+import sys
+from select import select
+
+if sys.platform == 'win32':
+    import msvcrt
+else:
+    import termios
+    import tty
+
+# CONSTANT
+INI_0_FLOAT = 0.0
+INI_0_INT = 0
 
 #first try to connect to shared memory (VR), if it fails use local GUI
 c = p.connect(p.SHARED_MEMORY)
@@ -25,7 +37,7 @@ if (c < 0):
 p.setAdditionalSearchPath(pybullet_data.getDataPath())  
 
 #set gravity(optional)
-p.setGravity(0,0,-0.2)
+p.setGravity(0,0,-0.98)
 
 #camera Setting
 p.resetDebugVisualizerCamera(cameraDistance=1.5,cameraYaw=0,cameraPitch=-40,cameraTargetPosition=[0.4,-0.85,0.2])
@@ -37,7 +49,7 @@ objectUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"random_urdfs/00
 
 #load the MuJoCo MJCF hand
 # handUid = p.loadMJCF('D:\주형찬\한양대\Rodel\HX-CES\hxces_glove\Hand_example\MPL.xml')
-handUid = p.loadMJCF('/home/rodel/hxces_glove/Hand_example/MPL.xml')
+handUid = p.loadMJCF('/home/chan/rodel/hxces_glove/Hand_example/MPL.xml')
 
 hand = handUid[0]
 #clamp in range 400-600
@@ -52,6 +64,9 @@ ringposId= 1
 middleId = 2
 indexId = 3
 thumbId = 4
+
+#fingerValue
+finger_value = [INI_0_INT for i in range(15)]
 
 p.setRealTimeSimulation(1)
 
@@ -89,17 +104,18 @@ def convertSensor(x, fingerIndex):
 ser = None
 portindex = 0
 while (ser is None and portindex < 30):
-  # linux serial port
-  portname = '/dev/ttyUSB' + str(portindex)
-  print(portname)
-  ser = getSerialOrNone(portname)
-  if (ser is not None):
+  if sys.platform == 'win32':
     # window serial port
     portname = 'COM' + str(portindex)
     print(portname)
     ser = getSerialOrNone(portname)
-    if (ser is not None):
-      print("Connected!")
+  else:
+    # linux serial port
+    portname = '/dev/ttyUSB' + str(portindex)
+    print(portname)
+    ser = getSerialOrNone(portname)
+  if (ser is not None):
+    print("Connected!")
   portindex = portindex + 1
 
 # data processing between esp32 and PC
@@ -109,22 +125,24 @@ if (ser is not None and ser.isOpen()):
       if ser.inWaiting():
         # read serial data from esp32
         read_value_byte = ser.readline()
-        print(read_value_byte)
+        # print(read_value_byte)
         str_check = b"A"
         end_check = b"\n"
         # check and convert the data from ESP32
         if (read_value_byte.startswith(str_check)) and (read_value_byte.endswith(end_check)) :
             read_value_string = read_value_byte.decode()
-            read_value_string_sliced = read_value_string[0:-2]
+            read_value_string_sliced = read_value_string[2:-1]
             words = read_value_string_sliced.split(',')
-            print(words)
-
-            if (len(words) == 15):
-              pink = convertSensor(words[1], pinkId)
-              ringpos = convertSensor(words[2], ringposId)
-              middle = convertSensor(words[3], middleId)
-              index = convertSensor(words[4], indexId)
-              thumb = convertSensor(words[5], thumbId)
+            # print(words)
+            for i in range(len(words)):
+              finger_value[i] = int(words[i])
+            print(finger_value)
+            if (len(finger_value) == 15):
+              pink = convertSensor(finger_value[0], pinkId)
+              ringpos = convertSensor(finger_value[1], ringposId)
+              middle = convertSensor(finger_value[2], middleId)
+              index = convertSensor(finger_value[3], indexId)
+              thumb = convertSensor(finger_value[4], thumbId)
 
               p.setJointMotorControl2(hand, 7, p.POSITION_CONTROL, pi / 4.)
               p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, thumb + pi / 10)
@@ -158,7 +176,7 @@ if (ser is not None and ser.isOpen()):
       # sending collision bool to esp32
       if True:
         msg = 'A{a}B{b}C{c}D{d}E{e}\n'.format(a=i, b=i, c=i, d=i, e=i)
-        print(msg)
+        # print(msg)
         ser.write(msg.encode('utf-8'))
         time.sleep(0.01)
 
@@ -168,7 +186,7 @@ if (ser is not None and ser.isOpen()):
     finally:
       i = 0
       msg = 'A{a}B{b}C{c}D{d}E{e}\n'.format(a=i, b=i, c=i, d=i, e=i)
-      print(msg)
+      # print(msg)
       ser.write(msg.encode('utf-8'))
       time.sleep(0.01)
       
