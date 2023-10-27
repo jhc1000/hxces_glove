@@ -83,28 +83,35 @@ def convertSensor(x, fingerIndex):
   b = (v - minV) / float(maxV - minV)
   return (b)
 
-
+# connecting Serial port 
 ser = None
 portindex = 0
 while (ser is None and portindex < 30):
+  # linux serial port
   portname = '/dev/ttyUSB' + str(portindex)
   print(portname)
   ser = getSerialOrNone(portname)
   if (ser is not None):
-    print("Connected!")
+    # window serial port
+    portname = 'COM' + str(portindex)
+    print(portname)
+    ser = getSerialOrNone(portname)
+    if (ser is not None):
+      print("Connected!")
   portindex = portindex + 1
 
+# data processing between esp32 and PC
 if (ser is not None and ser.isOpen()):
   while True:
-    if ser.inWaiting():
-      read_value_byte = ser.readline()
-      print(read_value_byte)
-      str_check = b"A"
-      end_check = b"\n"
-      try:
+    try:
+      if ser.inWaiting():
+        # read serial data from esp32
+        read_value_byte = ser.readline()
+        print(read_value_byte)
+        str_check = b"A"
+        end_check = b"\n"
         # check and convert the data from ESP32
         if (read_value_byte.startswith(str_check)) and (read_value_byte.endswith(end_check)) :
-          try:
             read_value_string = read_value_byte.decode()
             read_value_string_sliced = read_value_string[0:-2]
             words = read_value_string_sliced.split(',')
@@ -143,10 +150,27 @@ if (ser is not None and ser.isOpen()):
               print(pink)
               print(index)
               print(thumb)
-          except KeyboardInterrupt:
-            print(KeyboardInterrupt)
-      except KeyboardInterrupt:
-        print(KeyboardInterrupt)
+
+      i = 90
+
+      # sending collision bool to esp32
+      if True:
+        msg = 'A{a}B{b}C{c}D{d}E{e}\n'.format(a=i, b=i, c=i, d=i, e=i)
+        print(msg)
+        ser.write(msg.encode('utf-8'))
+        time.sleep(0.01)
+
+    except KeyboardInterrupt:
+      print(KeyboardInterrupt)
+
+    finally:
+      i = 0
+      msg = 'A{a}B{b}C{c}D{d}E{e}\n'.format(a=i, b=i, c=i, d=i, e=i)
+      print(msg)
+      ser.write(msg.encode('utf-8'))
+      time.sleep(0.01)
+      
+
 
 
 else:
