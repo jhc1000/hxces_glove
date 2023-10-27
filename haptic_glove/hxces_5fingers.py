@@ -11,6 +11,7 @@ import pybullet as p
 import pybullet_data
 import os
 import math
+from math import pi
 import pyfirmata
 
 
@@ -23,7 +24,7 @@ if (c < 0):
 p.setAdditionalSearchPath(pybullet_data.getDataPath())  
 
 #set gravity(optional)
-p.setGravity(0,0,0)
+p.setGravity(0,0,-0.2)
 
 #camera Setting
 p.resetDebugVisualizerCamera(cameraDistance=1.5,cameraYaw=0,cameraPitch=-40,cameraTargetPosition=[0.4,-0.85,0.2])
@@ -34,7 +35,7 @@ trayUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"tray/traybox.urdf
 objectUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"random_urdfs/000/000.urdf"),basePosition=[0.6,-0.5,0.1])
 
 #load the MuJoCo MJCF hand
-handUid = p.loadMJCF("C:\\Users\\wowjy\\.mujoco\\mujoco237\\Hand_example\\MPL.xml")
+handUid = p.loadMJCF("/home/chan/rodel/hxces_glove/Hand_example/MPL.xml")
 
 hand = handUid[0]
 #clamp in range 400-600
@@ -57,9 +58,11 @@ def getSerialOrNone(portname):
   try:
     return serial.Serial(port=portname,
                          baudrate=115200,
-                         parity=serial.PARITY_ODD,
-                         stopbits=serial.STOPBITS_TWO,
-                         bytesize=serial.SEVENBITS)
+                        #  parity=serial.PARITY_ODD,
+                        #  stopbits=serial.STOPBITS_TWO,
+                        #  bytesize=serial.SEVENBITS
+                         timeout=0.01,
+                        )       
   except:
     return None
 
@@ -84,62 +87,67 @@ def convertSensor(x, fingerIndex):
 ser = None
 portindex = 0
 while (ser is None and portindex < 30):
-  portname = 'COM' + str(portindex)
+  portname = '/dev/ttyUSB' + str(portindex)
   print(portname)
   ser = getSerialOrNone(portname)
-  if (ser is None):
-    portname = "/dev/cu.usbmodem14" + str(portindex)
-    print(portname)
-    ser = getSerialOrNone(portname)
-    if (ser is not None):
-      print("COnnected!")
+  if (ser is not None):
+    print("Connected!")
   portindex = portindex + 1
-
-if (ser is None):
-  ser = serial.Serial(port="/dev/cu.usbmodem1421",
-                      baudrate=115200,
-                      parity=serial.PARITY_ODD,
-                      stopbits=serial.STOPBITS_TWO,
-                      bytesize=serial.SEVENBITS)
-pi = 3.141592
 
 if (ser is not None and ser.isOpen()):
   while True:
-    while ser.inWaiting() > 0:
-      line = str(ser.readline())
-      words = line.split(",")
-      if (len(words) == 6):
-        pink = convertSensor(words[1], pinkId)
-        ringpos = convertSensor(words[2], ringposId)
-        middle = convertSensor(words[3], middleId)
-        index = convertSensor(words[4], indexId)
-        thumb = convertSensor(words[5], thumbId)
+    if ser.inWaiting():
+      read_value_byte = ser.readline()
+      print(read_value_byte)
+      str_check = b"A"
+      end_check = b"\n"
+      try:
+        # check and convert the data from ESP32
+        if (read_value_byte.startswith(str_check)) and (read_value_byte.endswith(end_check)) :
+          try:
+            read_value_string = read_value_byte.decode()
+            read_value_string_sliced = read_value_string[0:-2]
+            words = read_value_string_sliced.split(',')
+            print(words)
 
-        p.setJointMotorControl2(hand, 7, p.POSITION_CONTROL, pi / 4.)
-        p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, thumb + pi / 10)
-        p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, thumb)
-        p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, thumb)
+            if (len(words) == 15):
+              pink = convertSensor(words[1], pinkId)
+              ringpos = convertSensor(words[2], ringposId)
+              middle = convertSensor(words[3], middleId)
+              index = convertSensor(words[4], indexId)
+              thumb = convertSensor(words[5], thumbId)
 
-        p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, index)
-        p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, index)
-        p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, index)
+              p.setJointMotorControl2(hand, 7, p.POSITION_CONTROL, pi / 4.)
+              p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, thumb + pi / 10)
+              p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, thumb)
+              p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, thumb)
 
-        p.setJointMotorControl2(hand, 24, p.POSITION_CONTROL, middle)
-        p.setJointMotorControl2(hand, 26, p.POSITION_CONTROL, middle)
-        p.setJointMotorControl2(hand, 28, p.POSITION_CONTROL, middle)
+              p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, index)
+              p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, index)
+              p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, index)
 
-        p.setJointMotorControl2(hand, 32, p.POSITION_CONTROL, ringpos)
-        p.setJointMotorControl2(hand, 34, p.POSITION_CONTROL, ringpos)
-        p.setJointMotorControl2(hand, 36, p.POSITION_CONTROL, ringpos)
+              p.setJointMotorControl2(hand, 24, p.POSITION_CONTROL, middle)
+              p.setJointMotorControl2(hand, 26, p.POSITION_CONTROL, middle)
+              p.setJointMotorControl2(hand, 28, p.POSITION_CONTROL, middle)
 
-        p.setJointMotorControl2(hand, 40, p.POSITION_CONTROL, pink)
-        p.setJointMotorControl2(hand, 42, p.POSITION_CONTROL, pink)
-        p.setJointMotorControl2(hand, 44, p.POSITION_CONTROL, pink)
+              p.setJointMotorControl2(hand, 32, p.POSITION_CONTROL, ringpos)
+              p.setJointMotorControl2(hand, 34, p.POSITION_CONTROL, ringpos)
+              p.setJointMotorControl2(hand, 36, p.POSITION_CONTROL, ringpos)
+
+              p.setJointMotorControl2(hand, 40, p.POSITION_CONTROL, pink)
+              p.setJointMotorControl2(hand, 42, p.POSITION_CONTROL, pink)
+              p.setJointMotorControl2(hand, 44, p.POSITION_CONTROL, pink)
 
 
-        #print(middle)
-        #print(pink)
-        #print(index)
-        #print(thumb)
+              print(middle)
+              print(pink)
+              print(index)
+              print(thumb)
+          except KeyboardInterrupt:
+            print(KeyboardInterrupt)
+      except KeyboardInterrupt:
+        print(KeyboardInterrupt)
+
+
 else:
   print("Cannot find port")
