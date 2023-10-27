@@ -13,7 +13,7 @@ int maxUs = 2500;
 #define BTSERIAL_DEVICE_NAME "hxces-dodo-right"
 unsigned long timeout = 20;
 
-#define MAXENCODE "A255B255C255D255E255F255G255H255J255K255L255M255N255O255P255\n"
+#define MAXENCODE "A,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255\n"
 #define MAXDECODE "A255B255C255D255E255\n"
 // [Potentiometer]
 //ANALOG INPUT CONFIG
@@ -79,7 +79,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   int* finger_value = getFingerPositions(0, 0);
   int* wire_value = getWirePositions(0, 0);
-  // Serial.print(encode(finger_value));
+  Serial.print(encode(finger_value));
 
   // for (int i = 0; i < 5; i++) {
   //   Serial.print(wire_value[i]);
@@ -104,7 +104,7 @@ void loop() {
   #if USING_FORCE_FEEDBACK
     char received[sizeof(MAXDECODE)];
     if (readData(received)) {
-      Serial.println(received);
+      // Serial.println(received);
       decodeData(received, hapticLimits);
     }
   #endif
@@ -130,7 +130,7 @@ void SERVO(void * parameter) {
 // functions
 char* encode(int* flexion) {
   static char stringToEncode[sizeof(MAXENCODE)];
-  sprintf(stringToEncode, "A%dB%dC%dD%dE%dF%dG%dH%dI%dJ%dK%dL%dM%dN%dP%d\n",
+  sprintf(stringToEncode, "A,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
           flexion[0], flexion[1], flexion[2], flexion[3], flexion[4], flexion[5], flexion[6],
           flexion[7], flexion[8], flexion[9], flexion[10], flexion[11], flexion[12], flexion[13],
           flexion[14]);
@@ -144,7 +144,7 @@ void decodeData(char* stringToDecode, int* hapticLimits) {
   hapticLimits[3] = getArgument(stringToDecode, 'D');  //ring
   hapticLimits[4] = getArgument(stringToDecode, 'E');  //pinky
   
-  Serial.println("Haptic: "+ (String)hapticLimits[0] + " " + (String)hapticLimits[1] + " " + (String)hapticLimits[2] + " " + (String)hapticLimits[3] + " " + (String)hapticLimits[4] + " ");
+  // Serial.println("Haptic: "+ (String)hapticLimits[0] + " " + (String)hapticLimits[1] + " " + (String)hapticLimits[2] + " " + (String)hapticLimits[3] + " " + (String)hapticLimits[4] + " ");
 }
 
 int getArgument(char* stringToDecode, char command) {
@@ -260,7 +260,7 @@ bool readData(char* input) {
 char* rx_from_serial() {
   char ch[sizeof(MAXDECODE)];
   String msg = Serial.readStringUntil('\n');
-  Serial.println(msg);
+  // Serial.println(msg);
   if (msg.startsWith("A")) {
     int term1 = msg.indexOf("A");               //A
     int term2 = msg.indexOf("B", term1 + 1);    //thumb
@@ -268,12 +268,12 @@ char* rx_from_serial() {
     int term4 = msg.indexOf("D", term3 + 1);    //middle
     int term5 = msg.indexOf("E", term4 + 1);    //ring
     int term6 = msg.indexOf("\n", term5 + 1);   //pinky
-    Serial.println(term1);
-    Serial.println(term2);
-    Serial.println(term3);
-    Serial.println(term4);
-    Serial.println(term5);
-    Serial.println(term6);
+    // Serial.println(term1);
+    // Serial.println(term2);
+    // Serial.println(term3);
+    // Serial.println(term4);
+    // Serial.println(term5);
+    // Serial.println(term6);
         
     hapticLimits[0] = (msg.substring(term1 + 1, term2)).toInt();
     hapticLimits[1] = (msg.substring(term2 + 1, term3)).toInt();
@@ -281,10 +281,10 @@ char* rx_from_serial() {
     hapticLimits[3] = (msg.substring(term4 + 1, term5)).toInt();
     hapticLimits[4] = (msg.substring(term5 + 1, term6)).toInt();
     
-    Serial.println("Haptic: "+ (String)hapticLimits[0] + " " + (String)hapticLimits[1] + " " + (String)hapticLimits[2] + " " + (String)hapticLimits[3] + " " + (String)hapticLimits[4] + " ");
+    // Serial.println("Haptic: "+ (String)hapticLimits[0] + " " + (String)hapticLimits[1] + " " + (String)hapticLimits[2] + " " + (String)hapticLimits[3] + " " + (String)hapticLimits[4] + " ");
   }
   strcpy(ch, msg.c_str());
-  Serial.println(String(ch));
+  // Serial.println(String(ch));
   return ch;
 }
 
