@@ -34,13 +34,6 @@ INI_0_INT = 0
 tinyForce= 20
 move = 0.01#0.00035
 
-def get_key_pressed():
-        pressed_keys = []
-        events = p.getKeyboardEvents()
-        key_codes = events.keys()
-        for key in key_codes:
-            pressed_keys.append(key)
-        return pressed_keys
 
 #first try to connect to shared memory (VR), if it fails use local GUI
 c = p.connect(p.SHARED_MEMORY)
@@ -57,10 +50,10 @@ p.setGravity(0,0,-9.8)
 p.resetDebugVisualizerCamera(cameraDistance=1.5,cameraYaw=0,cameraPitch=-40,cameraTargetPosition=[0.4,-0.85,0.2])
 
 #basic object
-tableUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"table/table.urdf"),basePosition=[0.35,-0.5,-0.625])
-trayUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"tray/traybox.urdf"),basePosition=[0.6,-0.5,0])
+tableUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"table/table.urdf"),basePosition=[0.1,-0.2,-0.625])
+trayUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"tray/traybox.urdf"),basePosition=[-0.1,-0.2,0])
 # objectUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"random_urdfs/000/000.urdf"),basePosition=[0.6,-0.5,0.1])
-objectUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"sphere_small.urdf"),basePosition=[0.6,-0.5,0.1])
+objectUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"sphere_small.urdf"),basePosition=[0.0,-0.3,0.4])
 
 #load the MuJoCo MJCF hand
 # handUid = p.loadMJCF('D:\주형찬\한양대\Rodel\HX-CES\hxces_glove\Hand_example\MPL.xml')
@@ -70,7 +63,7 @@ handUid = p.loadMJCF('/home/chan/rodel/hxces_glove/Hand_example/MPL.xml')
 hand = handUid[0]
 hand_cid = p.createConstraint(hand,-1,-1,-1,p.JOINT_FIXED,[0,0,0],[0,0,0],[0,0,0])
 hand_po = p.getBasePositionAndOrientation(hand)
-ho = p.getQuaternionFromEuler([0.0, -pi/2, pi])
+ho = p.getQuaternionFromEuler([0.0, pi, pi])
 p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho, maxForce=200)
 
 #clamp in range 400-600
