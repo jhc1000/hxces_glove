@@ -70,7 +70,7 @@ handUid = p.loadMJCF('/home/chan/rodel/hxces_glove/Hand_example/MPL.xml')
 hand = handUid[0]
 hand_cid = p.createConstraint(hand,-1,-1,-1,p.JOINT_FIXED,[0,0,0],[0,0,0],[0,0,0])
 hand_po = p.getBasePositionAndOrientation(hand)
-ho = p.getQuaternionFromEuler([0.0, 0.0, pi])
+ho = p.getQuaternionFromEuler([0.0, -pi/2, pi])
 p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho, maxForce=200)
 
 #clamp in range 400-600
@@ -89,6 +89,9 @@ thumbId = 4
 #fingerValue
 finger_value = [INI_0_INT for i in range(15)]
 
+#collisionDetection
+collision_bool = [1 for i in range(5)]
+
 p.setRealTimeSimulation(1)
 
 
@@ -99,7 +102,7 @@ def getSerialOrNone(portname):
                         #  parity=serial.PARITY_ODD,
                         #  stopbits=serial.STOPBITS_TWO,
                         #  bytesize=serial.SEVENBITS
-                         timeout=0.01,
+                         timeout=0.1,
                         )       
   except:
     return None
@@ -111,15 +114,15 @@ def convertSensor(x, fingerIndex):
 
   v = minV
   try:
-    v = float(x)
+    v = int(x)
   except ValueError:
     v = minV
   if (v < minV):
     v = minV
   if (v > maxV):
     v = maxV
-  b = (v - minV) / float(maxV - minV)
-  return (b)
+  b = (v - minV) / int(maxV - minV)
+  return int(b)
 
 # connecting Serial port 
 ser = None
@@ -142,26 +145,36 @@ while (ser is None and portindex < 30):
 
 # data processing between esp32 and PC
 if (ser is not None and ser.isOpen()):
-  while True:
-    try:
+  try:
+    while True:
       key = p.getKeyboardEvents()
       print(key)
       for k in key.keys():
           hand_po = p.getBasePositionAndOrientation(hand)
           if k == 65296: #left 
-              p.changeConstraint(hand_cid,(hand_po[0][0]+move,hand_po[0][1],hand_po[0][2]),ho, maxForce=tinyForce)
+            p.changeConstraint(hand_cid,(hand_po[0][0]+move,hand_po[0][1],hand_po[0][2]),ho, maxForce=tinyForce)
           elif k == 65295: #right        
-              p.changeConstraint(hand_cid,(hand_po[0][0]-move,hand_po[0][1],hand_po[0][2]),ho, maxForce=tinyForce)
+            p.changeConstraint(hand_cid,(hand_po[0][0]-move,hand_po[0][1],hand_po[0][2]),ho, maxForce=tinyForce)
           elif k == 65297: #up        
-              p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]+move,hand_po[0][2]),ho, maxForce=tinyForce)
+            p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]+move,hand_po[0][2]),ho, maxForce=tinyForce)
           elif k == 65298: #down         
-              p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]-move,hand_po[0][2]),ho, maxForce=tinyForce)
-          elif k == 44: #< 4 key       
-              p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]+move),ho, maxForce=tinyForce)            
-          elif k == 46: #> 5 key           
-              p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]-move),ho, maxForce=tinyForce)
+            p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]-move,hand_po[0][2]),ho, maxForce=tinyForce)
+          elif k == 44: #< z up key       
+            p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]+move),ho, maxForce=tinyForce)            
+          elif k == 46: #> z down key           
+            p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]-move),ho, maxForce=tinyForce)
+          elif k == 107: #k tilt + key       
+            ho = p.getQuaternionFromEuler([p.getEulerFromQuaternion(ho)[0], 
+                                           p.getEulerFromQuaternion(ho)[1]+move*pi, 
+                                           p.getEulerFromQuaternion(ho)[2]])    
+            p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho, maxForce=tinyForce)
+          elif k == 108: #l tilt - key 
+            ho = p.getQuaternionFromEuler([p.getEulerFromQuaternion(ho)[0], 
+                                           p.getEulerFromQuaternion(ho)[1]-move*pi, 
+                                           p.getEulerFromQuaternion(ho)[2]])          
+            p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho, maxForce=tinyForce)
 
-
+              
       if ser.inWaiting():
         # read serial data from esp32
         read_value_byte = ser.readline()
@@ -212,24 +225,24 @@ if (ser is not None and ser.isOpen()):
               # print(index)
               # print(thumb)
 
-      i = 90
-
       # sending collision bool to esp32
       if True:
-        msg = 'A{a}B{b}C{c}D{d}E{e}\n'.format(a=i, b=i, c=i, d=i, e=i)
+        msg = 'A{a}B{b}C{c}D{d}E{e}\n'.format(a=collision_bool[0], b=collision_bool[1], 
+                                              c=collision_bool[2], d=collision_bool[3], 
+                                              e=collision_bool[4])
         # print(msg)
         ser.write(msg.encode('utf-8'))
         time.sleep(0.01)
 
-    except KeyboardInterrupt:
-      print(KeyboardInterrupt)
+  except KeyboardInterrupt:
+    print(KeyboardInterrupt)
 
-    finally:
-      i = 0
-      msg = 'A{a}B{b}C{c}D{d}E{e}\n'.format(a=i, b=i, c=i, d=i, e=i)
-      # print(msg)
-      ser.write(msg.encode('utf-8'))
-      time.sleep(0.01)
+  finally:
+    i = 0
+    msg = 'A{a}B{b}C{c}D{d}E{e}\n'.format(a=i, b=i, c=i, d=i, e=i)
+    # print(msg)
+    ser.write(msg.encode('utf-8'))
+    time.sleep(0.01)
       
 
 

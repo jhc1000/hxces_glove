@@ -32,11 +32,13 @@ unsigned long timeout = 20;
 
 #define USING_FORCE_FEEDBACK true
 int hapticLimits[5] = {0,0,0,0,0};
+int servo_fixed[5] = {30,30,30,30,30};
+int servo_released[5] = {0,0,0,0,0};
 
 // [PIN]
-const int PIN_SERVO[5] = {1,42,40,38,36}; //1 2 5 번 됨 1 42 36
+const int PIN_SERVO[5] = {36,38,40,42,1};
 const int PIN_FINGER[15] = {14,13,12,11,10,9,8,18,17,16,15,7,6,5,4};
-const int PIN_ENC_SERVO[5] = {2,41,39,37,35};
+const int PIN_ENC_SERVO[5] = {35,37,39,41,2};
 
 //function forward config
 char* encode(int* flexion);
@@ -87,18 +89,6 @@ void loop() {
   // }
   // Serial.println("");
 
-  // for(int posDegrees = 0; posDegrees < 180; posDegrees++) {
-  //       setServos(posDegrees);
-  //       // Serial.println(posDegrees);
-  //       vTaskDelay(pdMS_TO_TICKS(50));
-  //   }
-
-  //   for(int posDegrees = 180; posDegrees > 0; posDegrees--) {
-  //       setServos(posDegrees);
-  //       // Serial.println(posDegrees);
-  //       vTaskDelay(pdMS_TO_TICKS(50));
-  //   }
-  // setServos(90);
   vTaskDelay(pdMS_TO_TICKS(5));
 
   #if USING_FORCE_FEEDBACK
@@ -108,21 +98,14 @@ void loop() {
       decodeData(received, hapticLimits);
     }
   #endif
-
-  // #if USING_FORCE_FEEDBACK
-  //   if (Serial.available()>0) {
-  //     char* received = rx_from_serial();
-  //   }
-  // #endif
-
   vTaskDelay(pdMS_TO_TICKS(5));
 }
 
 void SERVO(void * parameter) {
   for(;;) {
     #if USING_FORCE_FEEDBACK
-    writeServoHaptics(hapticLimits);
-    vTaskDelay(pdMS_TO_TICKS(20));
+      writeServoHaptics(hapticLimits);
+      vTaskDelay(pdMS_TO_TICKS(10));
     #endif
   }
 }
@@ -234,13 +217,17 @@ int* getWirePositions(bool calibrating, bool reset) {
 }
 
 void writeServoHaptics(int* hapticLimits) {
-  float scaledLimits[5];
-  scaleLimits(hapticLimits, scaledLimits);
-  if (hapticLimits[0] >= 0) servo[0].write(scaledLimits[0]);
-  if (hapticLimits[1] >= 0) servo[1].write(scaledLimits[1]);
-  if (hapticLimits[2] >= 0) servo[2].write(scaledLimits[2]);
-  if (hapticLimits[3] >= 0) servo[3].write(scaledLimits[3]);
-  if (hapticLimits[4] >= 0) servo[4].write(scaledLimits[4]);
+  
+  if (hapticLimits[0] > 0) servo[0].write(servo_fixed[0]);
+  else servo[0].write(servo_released[0]);
+  if (hapticLimits[1] > 0) servo[1].write(servo_fixed[1]);
+  else servo[1].write(servo_released[1]);
+  if (hapticLimits[2] > 0) servo[2].write(servo_fixed[2]);
+  else servo[2].write(servo_released[2]);
+  if (hapticLimits[3] > 0) servo[3].write(servo_fixed[3]);
+  else servo[3].write(servo_released[3]);
+  if (hapticLimits[4] > 0) servo[4].write(servo_fixed[4]);
+  else servo[4].write(servo_released[4]);
 }
 
 //static scaling, maps to entire range of servo
