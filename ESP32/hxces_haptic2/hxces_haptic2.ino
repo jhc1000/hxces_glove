@@ -35,7 +35,7 @@ int hapticLimits[5] = {0,0,0,0,0};
 
 // [PIN]
 const int PIN_SERVO[5] = {1,42,40,38,36}; //1 2 5 번 됨 1 42 36
-const int PIN_FINGER[15] = {4,5,6,7,15,16,17,18,8,9,10,11,12,13,14};
+const int PIN_FINGER[15] = {14,13,12,11,10,9,8,18,17,16,15,7,6,5,4};
 const int PIN_ENC_SERVO[5] = {2,41,39,37,35};
 
 //function forward config
@@ -287,4 +287,3 @@ char* rx_from_serial() {
   // Serial.println(String(ch));
   return ch;
 }
-
