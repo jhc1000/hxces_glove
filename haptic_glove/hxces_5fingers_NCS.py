@@ -219,7 +219,8 @@ if (ser is not None and ser.isOpen()):
               # print(thumb)
 
       # sending collision bool to esp32
-      if True:
+      if any (collision_bool) > 0:
+        
         msg = 'A{a}B{b}C{c}D{d}E{e}\n'.format(a=collision_bool[0], b=collision_bool[1], 
                                               c=collision_bool[2], d=collision_bool[3], 
                                               e=collision_bool[4])
