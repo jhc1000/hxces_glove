@@ -16,6 +16,7 @@ from math import pi
 from math import radians
 import pyfirmata
 
+
 import sys
 from select import select
 
@@ -29,6 +30,18 @@ else:
 INI_0_FLOAT = 0.0
 INI_0_INT = 0
 
+# tinyForce= 2*10e-7
+tinyForce= 20
+move = 0.01#0.00035
+
+def get_key_pressed():
+        pressed_keys = []
+        events = p.getKeyboardEvents()
+        key_codes = events.keys()
+        for key in key_codes:
+            pressed_keys.append(key)
+        return pressed_keys
+
 #first try to connect to shared memory (VR), if it fails use local GUI
 c = p.connect(p.SHARED_MEMORY)
 print(c)
@@ -38,7 +51,7 @@ if (c < 0):
 p.setAdditionalSearchPath(pybullet_data.getDataPath())  
 
 #set gravity(optional)
-p.setGravity(0,0,-0.98)
+p.setGravity(0,0,-9.8)
 
 #camera Setting
 p.resetDebugVisualizerCamera(cameraDistance=1.5,cameraYaw=0,cameraPitch=-40,cameraTargetPosition=[0.4,-0.85,0.2])
@@ -55,6 +68,11 @@ handUid = p.loadMJCF('/home/chan/rodel/hxces_glove/Hand_example/MPL.xml')
 # handUid = p.loadMJCF("C:\\Users\\wowjy\\.mujoco\\mujoco237\\Hand_example\\MPL.xml")
 
 hand = handUid[0]
+hand_cid = p.createConstraint(hand,-1,-1,-1,p.JOINT_FIXED,[0,0,0],[0,0,0],[0,0,0])
+hand_po = p.getBasePositionAndOrientation(hand)
+ho = p.getQuaternionFromEuler([0.0, 0.0, pi])
+p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho, maxForce=200)
+
 #clamp in range 400-600
 #minV = 400
 #maxV = 600
@@ -121,10 +139,29 @@ while (ser is None and portindex < 30):
     print("Connected!")
   portindex = portindex + 1
 
+
 # data processing between esp32 and PC
 if (ser is not None and ser.isOpen()):
   while True:
     try:
+      key = p.getKeyboardEvents()
+      print(key)
+      for k in key.keys():
+          hand_po = p.getBasePositionAndOrientation(hand)
+          if k == 65296: #left 
+              p.changeConstraint(hand_cid,(hand_po[0][0]+move,hand_po[0][1],hand_po[0][2]),ho, maxForce=tinyForce)
+          elif k == 65295: #right        
+              p.changeConstraint(hand_cid,(hand_po[0][0]-move,hand_po[0][1],hand_po[0][2]),ho, maxForce=tinyForce)
+          elif k == 65297: #up        
+              p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]+move,hand_po[0][2]),ho, maxForce=tinyForce)
+          elif k == 65298: #down         
+              p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]-move,hand_po[0][2]),ho, maxForce=tinyForce)
+          elif k == 44: #< 4 key       
+              p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]+move),ho, maxForce=tinyForce)            
+          elif k == 46: #> 5 key           
+              p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]-move),ho, maxForce=tinyForce)
+
+
       if ser.inWaiting():
         # read serial data from esp32
         read_value_byte = ser.readline()
@@ -147,24 +184,24 @@ if (ser is not None and ser.isOpen()):
               # index = convertSensor(finger_value[3], indexId)
               # thumb = convertSensor(finger_value[4], thumbId)
 
-            #thumb
+              #thumb
               p.setJointMotorControl2(hand, 7, p.POSITION_CONTROL, radians(finger_value[0]))
               p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, radians(finger_value[1]))
               p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, radians(finger_value[2]))
               p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, pi/4)
-            #index
+              #index
               p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians(finger_value[3]))
               p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(finger_value[4]))
               p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(finger_value[5]))
-            #middle
+              #middle
               p.setJointMotorControl2(hand, 24, p.POSITION_CONTROL, radians(finger_value[6]))
               p.setJointMotorControl2(hand, 26, p.POSITION_CONTROL, radians(finger_value[7]))
               p.setJointMotorControl2(hand, 28, p.POSITION_CONTROL, radians(finger_value[8]))
-            #ringpos
+              #ringpos
               p.setJointMotorControl2(hand, 32, p.POSITION_CONTROL, radians(finger_value[9]))
               p.setJointMotorControl2(hand, 34, p.POSITION_CONTROL, radians(finger_value[10]))
               p.setJointMotorControl2(hand, 36, p.POSITION_CONTROL, radians(finger_value[11]))
-            #pink
+              #pink
               p.setJointMotorControl2(hand, 40, p.POSITION_CONTROL, radians(finger_value[12]))
               p.setJointMotorControl2(hand, 42, p.POSITION_CONTROL, radians(finger_value[13]))
               p.setJointMotorControl2(hand, 44, p.POSITION_CONTROL, radians(finger_value[14]))

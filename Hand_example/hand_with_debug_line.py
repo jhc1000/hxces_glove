@@ -1,13 +1,13 @@
 import pybullet as p
 p.connect(p.GUI)
 
-obj_to_classify = p.loadURDF("loader.stl.urdf",(0,-1,0), useFixedBase=1)
+obj_to_classify = p.loadURDF("/home/chan/rodel/hxces_glove/Hand_example/loader.stl.urdf",(0,-1,0), useFixedBase=1)
 
 move = 0.1
 
 p.setGravity(0,0,0)
 
-objects = p.loadMJCF("MPL.xml",flags=0)
+objects = p.loadMJCF("/home/chan/rodel/hxces_glove/Hand_example/MPL.xml",flags=0)
 hand=objects[0]  #1 total
 obj_po = p.getBasePositionAndOrientation(obj_to_classify)
 hand_cid = p.createConstraint(hand,-1,-1,-1,p.JOINT_FIXED,[0,0,0],[0,0,0],[0,0,0])

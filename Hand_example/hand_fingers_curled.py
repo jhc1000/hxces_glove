@@ -1,7 +1,7 @@
 import pybullet as p
 p.connect(p.GUI)
 
-obj_to_classify = p.loadURDF("loader.stl.urdf",(0,-1,0), useFixedBase=1)
+obj_to_classify = p.loadURDF("/home/chan/rodel/hxces_glove/Hand_example/loader.stl.urdf",(0,-1,0), useFixedBase=1)
 
 # 0.004166666666666667 default fixed timestep
 # strong coupling between the time step, move parameter, and the tiny force applied in collisions
@@ -13,7 +13,7 @@ tinyForce= 2*10e-7
 p.setPhysicsEngineParameter(fixedTimeStep=timeStep)
 p.setGravity(0,0,0)
 
-objects = p.loadMJCF("MPL.xml", flags=0)
+objects = p.loadMJCF("/home/chan/rodel/hxces_glove/Hand_example/MPL.xml", flags=0)
 hand=objects[0]  #1 total
 
 obj_po = p.getBasePositionAndOrientation(obj_to_classify)
@@ -77,17 +77,17 @@ while (1):
     key = p.getKeyboardEvents()
     for k in key.keys():
         hand_po = p.getBasePositionAndOrientation(hand)
-        if k == 48: #down - 0 key on keyboard
+        if k == 65298: #down - 0 key on keyboard
             p.changeConstraint(hand_cid,(hand_po[0][0]+move,hand_po[0][1],hand_po[0][2]),ho, maxForce=tinyForce)
-        elif k == 49: #up   1 key         
+        elif k == 65297: #up   1 key         
             p.changeConstraint(hand_cid,(hand_po[0][0]-move,hand_po[0][1],hand_po[0][2]),ho, maxForce=tinyForce)
-        elif k == 50: #left 2 key           
+        elif k == 65295: #left 2 key           
             p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]+move,hand_po[0][2]),ho, maxForce=tinyForce)
-        elif k == 51: #right 3 key           
+        elif k == 65296: #right 3 key           
             p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]-move,hand_po[0][2]),ho, maxForce=tinyForce)
-        elif k == 52: #< 4 key       
+        elif k == 44: #< 4 key       
             p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]+move),ho, maxForce=tinyForce)            
-        elif k == 53: #> 5 key           
+        elif k == 46: #> 5 key           
             p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]-move),ho, maxForce=tinyForce)
 
     p.stepSimulation()  

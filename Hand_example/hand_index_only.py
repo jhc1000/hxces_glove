@@ -1,7 +1,7 @@
 import pybullet as p
 p.connect(p.GUI)
 
-obj_to_classify = p.loadURDF("loader.stl.urdf",(0,-1,0), useFixedBase=1)
+obj_to_classify = p.loadURDF("/home/chan/rodel/hxces_glove/Hand_example/loader.stl.urdf",(0,-1,0), useFixedBase=1)
 
 # 0.004166666666666667 default fixed timestep
 # strong coupling between the time step, move parameter, and the tiny force applied in collisions
@@ -14,7 +14,7 @@ p.setPhysicsEngineParameter(fixedTimeStep=timeStep)
 p.setGravity(0,0,0)
 
 #objects = p.loadMJCF("MPL_index_only.xml",flags=0)
-objects = p.loadMJCF("MPL.xml", flags=0)
+objects = p.loadMJCF("/home/chan/rodel/hxces_glove/Hand_example/MPL.xml", flags=0)
 hand=objects[0]  #1 total
 
 obj_po = p.getBasePositionAndOrientation(obj_to_classify)
