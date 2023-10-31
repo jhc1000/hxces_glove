@@ -10,11 +10,12 @@ import serial
 import time
 import pybullet as p
 import pybullet_data
+import pyb_utils as pyu
 import os
 import math
-from math import pi
-from math import radians
+from math import pi, radians
 import pyfirmata
+import numpy as np
 
 
 import sys
@@ -35,36 +36,80 @@ tinyForce= 20
 move = 0.01#0.00035
 
 
-#first try to connect to shared memory (VR), if it fails use local GUI
-c = p.connect(p.SHARED_MEMORY)
-print(c)
-if (c < 0):
-  p.connect(p.GUI)
+def load_environment(client_id):
+    p.setAdditionalSearchPath(
+        pybullet_data.getDataPath(), physicsClientId=client_id
+    )
 
-p.setAdditionalSearchPath(pybullet_data.getDataPath())  
+    #set gravity(optional)
+    p.setGravity(0,0,-9.8)
 
-#set gravity(optional)
-p.setGravity(0,0,-9.8)
+    #camera Setting
+    p.resetDebugVisualizerCamera(cameraDistance=1.5,cameraYaw=0,cameraPitch=-40,cameraTargetPosition=[0.4,-0.85,0.2])
 
-#camera Setting
-p.resetDebugVisualizerCamera(cameraDistance=1.5,cameraYaw=0,cameraPitch=-40,cameraTargetPosition=[0.4,-0.85,0.2])
 
-#basic object
-tableUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"table/table.urdf"),basePosition=[0.1,-0.2,-0.625])
-trayUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"tray/traybox.urdf"),basePosition=[-0.1,-0.2,0])
-# objectUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"random_urdfs/000/000.urdf"),basePosition=[0.6,-0.5,0.1])
-objectUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"sphere_small.urdf"),basePosition=[0.0,-0.3,0.4])
+    # ground plane
+    ground_id = p.loadURDF(
+        "plane.urdf",
+        [0, 0, 0],
+        useFixedBase=True,
+        physicsClientId=client_id,
+    )
 
-#load the MuJoCo MJCF hand
-# handUid = p.loadMJCF('D:\주형찬\한양대\Rodel\HX-CES\hxces_glove\Hand_example\MPL.xml')
-handUid = p.loadMJCF('/home/chan/rodel/hxces_glove/Hand_example/MPL.xml')
-# handUid = p.loadMJCF("C:\\Users\\wowjy\\.mujoco\\mujoco237\\Hand_example\\MPL.xml")
+    # basic object
+    tableUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"table/table.urdf"),
+                          basePosition=[0.1,-0.2,-0.625],
+                          useFixedBase=True,
+                          physicsClientId=client_id,
+                          )
+    trayUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"tray/traybox.urdf"),
+                          basePosition=[-0.1,-0.2,0],
+                          useFixedBase=False,
+                          physicsClientId=client_id,
+                          )
+    objectUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"sphere_small.urdf"),
+                          basePosition=[0.0,-0.3,0.4],
+                          useFixedBase=False,
+                          physicsClientId=client_id,
+                          )
 
-hand = handUid[0]
-hand_cid = p.createConstraint(hand,-1,-1,-1,p.JOINT_FIXED,[0,0,0],[0,0,0],[0,0,0])
-hand_po = p.getBasePositionAndOrientation(hand)
-ho = p.getQuaternionFromEuler([0.0, pi, pi])
-p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho, maxForce=200)
+    #load the MuJoCo MJCF hand
+    # handUid = p.loadMJCF('D:\주형찬\한양대\Rodel\HX-CES\hxces_glove\Hand_example\MPL.xml')
+    handUid = p.loadMJCF('/home/chan/rodel/hxces_glove/Hand_example/MPL.xml',
+                         physicsClientId=client_id,)
+    # handUid = p.loadMJCF("C:\\Users\\wowjy\\.mujoco\\mujoco237\\Hand_example\\MPL.xml")
+
+    hand = handUid[0]
+    hand_cid = p.createConstraint(hand,-1,-1,-1,p.JOINT_FIXED,[0,0,0],[0,0,0],[0,0,0])
+    hand_po = p.getBasePositionAndOrientation(hand)
+    ho = p.getQuaternionFromEuler([0.0, pi, pi])
+    p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho, maxForce=200)
+
+    # store body indices in a dict with more convenient key names
+    bodies = {
+        "robot" : handUid,
+        "ground": ground_id,
+        "table": tableUid,
+        "tray": trayUid,
+        "ball1": objectUid,
+    }
+    return bodies
+
+
+# start the main physics server and load the environment
+# first try to connect to shared memory (VR), if it fails use local GUI
+gui_id = p.connect(p.SHARED_MEMORY)
+print(gui_id)
+if (gui_id < 0):
+  gui_id = p.connect(p.GUI)
+bodies = load_environment(gui_id)
+
+# collision 
+col_id = p.connect(p.DIRECT)
+
+# collision simulator has the same objects as the main one
+collision_bodies = load_environment(col_id) 
+
 
 #clamp in range 400-600
 #minV = 400
@@ -85,6 +130,29 @@ finger_value = [INI_0_INT for i in range(15)]
 #collisionDetection
 collision_bool = [1 for i in range(5)]
 
+# NamedCollisionObjects contain the name of the body, and optionally
+# the name of the link on the body to check for collisions
+col_ground = collision_bodies["ground"]
+col_table = collision_bodies["table"]
+col_tray = collision_bodies["tray"]
+col_ball1 = collision_bodies["ball1"]
+col_pinky3 = collision_bodies["robot"][0]
+
+# then we set up collision detection for desired pairs of objects
+col_detector = pyu.CollisionDetector(
+    col_id,  # client ID for collision physics server
+    # these are the pairs of objects to compute distances between
+    [(col_pinky3, col_ground),
+     (col_pinky3, col_table), 
+     (col_pinky3, col_tray), 
+     (col_pinky3, col_ball1)],
+)
+
+hand = bodies["robot"][0]
+hand_cid = p.createConstraint(hand,-1,-1,-1,p.JOINT_FIXED,[0,0,0],[0,0,0],[0,0,0])
+hand_po = p.getBasePositionAndOrientation(hand)
+ho = p.getQuaternionFromEuler([0.0, pi, pi])
+p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho, maxForce=200)
 p.setRealTimeSimulation(1)
 
 
