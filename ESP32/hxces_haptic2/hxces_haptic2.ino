@@ -40,6 +40,14 @@ const int PIN_SERVO[5] = {36,38,40,42,1};
 const int PIN_FINGER[15] = {14,13,12,11,10,9,8,18,17,16,15,7,6,5,4};
 const int PIN_ENC_SERVO[5] = {35,37,39,41,2};
 
+// [Serial2]
+#define rx2 48
+#define tx2 47
+
+// [EBIMU]
+// parameter for EMimu
+float euler[3];
+
 //function forward config
 char* encode(int* flexion);
 void decodeData(char* stringToDecode, int* hapticLimits);
@@ -53,6 +61,7 @@ void writeServoHaptics(int* hapticLimits);
 void scaleLimits(int* hapticLimits, float* scaledLimits);
 bool readData(char* input);
 char* rx_from_serial();
+void rx_from_imu();
 
 
 // [Multitask]
@@ -72,6 +81,9 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.setTimeout(timeout);
+
+  Serial2.begin(115200, SERIAL_8N1, rx2, tx2);
+  Serial2.setTimeout(timeout);
 
   setupInputs();
   setupPWM();
@@ -99,6 +111,10 @@ void loop() {
     }
   #endif
   vTaskDelay(pdMS_TO_TICKS(5));
+
+  rx_from_imu();
+  String imu_msg = "*," + String(euler[0]) + "," + String(euler[1]) + "," + String(euler[2]) + ",\n";
+  Serial.print(imu_msg);
 }
 
 void SERVO(void * parameter) {
@@ -273,4 +289,35 @@ char* rx_from_serial() {
   strcpy(ch, msg.c_str());
   // Serial.println(String(ch));
   return ch;
+}
+
+void rx_from_imu() {
+  if (Serial2.available()>0) {
+      String msg_from_imu = Serial2.readStringUntil(0x0a);
+    if (msg_from_imu.startsWith("*")) {
+      int term1 = msg_from_imu.indexOf("*");               // *
+      int term2 = msg_from_imu.indexOf(",", term1 + 1);    // pitch
+      int term3 = msg_from_imu.indexOf(",", term2 + 1);    // roll
+      int term4 = msg_from_imu.indexOf(",", term3 + 1);    // yaw
+  
+      String pitch_string = msg_from_imu.substring(term1 + 1, term2);
+      String roll_string = msg_from_imu.substring(term2 + 1, term3);
+      String yaw_string = msg_from_imu.substring(term3 + 1, term4);
+  
+      euler[0] = pitch_string.toFloat();
+      euler[1] = roll_string.toFloat();
+      euler[2] = yaw_string.toFloat();
+  
+//      Serial.print("Pitch :"); Serial.print(euler[0]);   Serial.print(" ");
+//      Serial.print("Roll :"); Serial.print(euler[1]);   Serial.print(" ");
+//      Serial.print("Yaw :"); Serial.print(euler[2]);   Serial.println(" ");
+    }
+    else {
+      // Serial.println("====== not imu data ======");
+    }
+  }
+  else {
+    // Serial.println("==== No data Received from imu ====");
+  }
+
 }
