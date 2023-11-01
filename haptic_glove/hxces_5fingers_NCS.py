@@ -136,17 +136,17 @@ col_ground = collision_bodies["ground"]
 col_table = collision_bodies["table"]
 col_tray = collision_bodies["tray"]
 col_ball1 = collision_bodies["ball1"]
-col_pinky3 = collision_bodies["robot"][0]
+col_middle3 = collision_bodies["robot"][0]
 
 # then we set up collision detection for desired pairs of objects
-col_detector = pyu.CollisionDetector(
-    col_id,  # client ID for collision physics server
-    # these are the pairs of objects to compute distances between
-    [(col_pinky3, col_ground),
-     (col_pinky3, col_table), 
-     (col_pinky3, col_tray), 
-     (col_pinky3, col_ball1)],
-)
+# col_detector = pyu.CollisionDetector(
+#     col_id,  # client ID for collision physics server
+#     # these are the pairs of objects to compute distances between
+#     [(col_pinky3, col_ground),
+#      (col_pinky3, col_table), 
+#      (col_pinky3, col_tray), 
+#      (col_pinky3, col_ball1)],
+# )
 
 hand = bodies["robot"][0]
 hand_cid = p.createConstraint(hand,-1,-1,-1,p.JOINT_FIXED,[0,0,0],[0,0,0],[0,0,0])
