@@ -87,6 +87,20 @@ def get_key_pressed():
             pressed_keys.append(key)
         return pressed_keys
 
+CollisionList_init = [[0.0,0.0,0.3,0.0,0.0,0.0,1.0]] #,[0.600,0,0,1.5,3.5,1,0],[0.700,0,0,1.5,3.5,1,0]]
+
+ConstraintLoadList = []
+CollisionLoadList = []
+
+def init_collision(CollisionList):
+    for count in range(0,len(CollisionList),1):
+        temp_CollisionList = CollisionList[count]
+        pos = temp_CollisionList[0:3]
+        orient = temp_CollisionList[3:7]
+
+        CollisionLoadList.append(p.loadURDF(os.path.join(pybullet_data.getDataPath(),"sphere_small.urdf"),pos,orient))
+        ConstraintLoadList.append(p.createConstraint(CollisionLoadList[count], -1, -1, -1, p.JOINT_FIXED, [0, 0, 0],parentFramePosition=[0,0,0],childFramePosition=pos,childFrameOrientation=orient))
+
 
 ############################################################################################################################################
 
@@ -104,8 +118,8 @@ def load_environment(client_id):
     p.resetDebugVisualizerCamera(
         cameraDistance=1,
         cameraYaw=-90,
-        cameraPitch=-60,
-        cameraTargetPosition=[0,-0.2,-0.2]
+        cameraPitch=-45,
+        cameraTargetPosition=[0,-0.2,0.0]
     )
 
     # ground plane
@@ -190,6 +204,8 @@ def main():
 
     p.setRealTimeSimulation(1)
 
+    # init_collision(CollisionList_init)
+
     # create user debug parameters
     collision_margin_param_gui = p.addUserDebugParameter(
         "collision_margin",
@@ -204,17 +220,27 @@ def main():
     # collision checking
     # ground = col_obstacles["ground"]
     sphere = col_obstacles["sphere"]
-    link1 = (col_robot.uid, "thumb3")
-    link2 = (col_robot.uid, "index3")
-    link3 = (col_robot.uid, "middle3")
-    link4 = (col_robot.uid, "ring3")
-    link5 = (col_robot.uid, "pinky3")
+    # link1 = (col_robot.uid, "thumb3")
+    # link2 = (col_robot.uid, "index3")
+    # link3 = (col_robot.uid, "middle3")
+    # link4 = (col_robot.uid, "ring3")
+    # link5 = (col_robot.uid, "pinky3")
+    link1 = (robot.uid, "thumb3")
+    link2 = (robot.uid, "index3")
+    link3 = (robot.uid, "middle3")
+    link4 = (robot.uid, "ring3")
+    link5 = (robot.uid, "pinky3")
 
-    col_detector1 = pyb_utils.CollisionDetector(col_id, [(link1, sphere)])
-    col_detector2 = pyb_utils.CollisionDetector(col_id, [(link2, sphere)])
-    col_detector3 = pyb_utils.CollisionDetector(col_id, [(link3, sphere)])
-    col_detector4 = pyb_utils.CollisionDetector(col_id, [(link4, sphere)])
-    col_detector5 = pyb_utils.CollisionDetector(col_id, [(link5, sphere)])
+    # col_detector1 = pyb_utils.CollisionDetector(col_id, [(link1, sphere)])
+    # col_detector2 = pyb_utils.CollisionDetector(col_id, [(link2, sphere)])
+    # col_detector3 = pyb_utils.CollisionDetector(col_id, [(link3, sphere)])
+    # col_detector4 = pyb_utils.CollisionDetector(col_id, [(link4, sphere)])
+    # col_detector5 = pyb_utils.CollisionDetector(col_id, [(link5, sphere)])
+    col_detector1 = pyb_utils.CollisionDetector(gui_id, [(link1, sphere)])
+    col_detector2 = pyb_utils.CollisionDetector(gui_id, [(link2, sphere)])
+    col_detector3 = pyb_utils.CollisionDetector(gui_id, [(link3, sphere)])
+    col_detector4 = pyb_utils.CollisionDetector(gui_id, [(link4, sphere)])
+    col_detector5 = pyb_utils.CollisionDetector(gui_id, [(link5, sphere)])
     print(col_detector1)
     print(col_detector2)
     print(col_detector3)
@@ -244,7 +270,7 @@ def main():
     if (ser is not None and ser.isOpen()):
         try:
             while True:
-                q = read_robot_params_gui(robot_params_gui, client_id=gui_id)
+                # q = read_robot_params_gui(robot_params_gui, client_id=gui_id)
 
                 # move to the requested configuration if it is not in collision,
                 # otherwise display a warning
@@ -252,11 +278,17 @@ def main():
                 # client, so we don't have to set the robot to a configuration in the
                 # main GUI sim to check if that configuration is in collision
 
-                col_robot.reset_joint_configuration(q)
+                # col_robot.reset_joint_configuration(q)
+                print(col_detector1.compute_distances())
+                print(col_detector2.compute_distances())
+                print(col_detector3.compute_distances())
+                print(col_detector4.compute_distances())
+                print(col_detector5.compute_distances())
+
                 if not col_detector1.in_collision(
                     margin=p.readUserDebugParameter(collision_margin_param_gui),
                 ):
-                    robot.reset_joint_configuration(q)
+                    # robot.reset_joint_configuration(q)
                     col_finger_value[0] = 0
                 else:
                     col_finger_value[0] = 1
@@ -268,11 +300,11 @@ def main():
                     lifeTime=0.2,
                     )
                 
-                col_robot.reset_joint_configuration(q)
+                # col_robot.reset_joint_configuration(q)
                 if not col_detector2.in_collision(
                     margin=p.readUserDebugParameter(collision_margin_param_gui),
                 ):
-                    robot.reset_joint_configuration(q)
+                    # robot.reset_joint_configuration(q)
                     col_finger_value[1] = 0
                 else:
                     col_finger_value[1] = 1
@@ -284,11 +316,11 @@ def main():
                     lifeTime=0.2,
                     )
 
-                col_robot.reset_joint_configuration(q)
+                # col_robot.reset_joint_configuration(q)
                 if not col_detector3.in_collision(
                     margin=p.readUserDebugParameter(collision_margin_param_gui),
                 ):
-                    robot.reset_joint_configuration(q)
+                    # robot.reset_joint_configuration(q)
                     col_finger_value[2] = 0
                 else:
                     col_finger_value[2] = 1
@@ -300,11 +332,11 @@ def main():
                     lifeTime=0.2,
                     )
 
-                col_robot.reset_joint_configuration(q)
+                # col_robot.reset_joint_configuration(q)
                 if not col_detector4.in_collision(
                     margin=p.readUserDebugParameter(collision_margin_param_gui),
                 ):
-                    robot.reset_joint_configuration(q)
+                    # robot.reset_joint_configuration(q)
                     col_finger_value[3] = 0
                 else:
                     col_finger_value[3] = 1
@@ -316,11 +348,11 @@ def main():
                     lifeTime=0.2,
                     )
 
-                col_robot.reset_joint_configuration(q)
+                # col_robot.reset_joint_configuration(q)
                 if not col_detector5.in_collision(
                     margin=p.readUserDebugParameter(collision_margin_param_gui),
                 ):
-                    robot.reset_joint_configuration(q)
+                    # robot.reset_joint_configuration(q)
                     col_finger_value[4] = 0
                 else:
                     col_finger_value[4] = 1
@@ -359,7 +391,19 @@ def main():
                     last_dists = dists5
 
                 time.sleep(TIMESTEP)
-                
+
+                # contact detection
+                # for count in range(0,len(CollisionLoadList),1):
+                #     cont_pts =p.getContactPoints(hand,CollisionLoadList[count])
+
+                # print(cont_pts)
+                # print(len(cont_pts))
+                # if(len(cont_pts) > 0):
+                #     print("Collision")
+                # else:
+                #     print("no collision")
+
+                # keyboard input
                 key = p.getKeyboardEvents()
                 # print(key)
                 for k in key.keys():
@@ -391,36 +435,56 @@ def main():
                         # print(words)
                         for i in range(len(words)):
                             finger_value[i] = int(words[i])
-                        print(finger_value)
+                        # print(finger_value)
                         if (len(finger_value) == 15):
+                            print(finger_value)
                             # if sensor value is converted
                             # pink = convertSensor(finger_value[0], pinkId)
                             # ringpos = convertSensor(finger_value[1], ringposId)
                             # middle = convertSensor(finger_value[2], middleId)
                             # index = convertSensor(finger_value[3], indexId)
                             # thumb = convertSensor(finger_value[4], thumbId)
+                            
+                            #others
+                            for count in range(45):
+                                p.setJointMotorControl2(hand, count, p.POSITION_CONTROL, 0.0)
 
                             #thumb
-                            p.setJointMotorControl2(hand, 7, p.POSITION_CONTROL, radians(finger_value[0]))
-                            p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, radians(finger_value[1]))
-                            p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, radians(finger_value[2]))
-                            p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, 0.0)
+                            p.setJointMotorControl2(hand, 7, p.POSITION_CONTROL, pi/2)
+                            # p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, radians(finger_value[0]))
+                            # p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, radians(finger_value[1]))
+                            # p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, radians(finger_value[2]))
+                            p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, radians(30.0))
                             #index
-                            p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians(finger_value[3]))
-                            p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(finger_value[4]))
-                            p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(finger_value[5]))
+                            # p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians(finger_value[3]))
+                            # p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(finger_value[4]))
+                            # p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(finger_value[5]))
+                            p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(30.0))
                             #middle
-                            p.setJointMotorControl2(hand, 24, p.POSITION_CONTROL, radians(finger_value[6]))
-                            p.setJointMotorControl2(hand, 26, p.POSITION_CONTROL, radians(finger_value[7]))
-                            p.setJointMotorControl2(hand, 28, p.POSITION_CONTROL, radians(finger_value[8]))
+                            # p.setJointMotorControl2(hand, 25, p.POSITION_CONTROL, radians(finger_value[6]))
+                            # p.setJointMotorControl2(hand, 27, p.POSITION_CONTROL, radians(finger_value[7]))
+                            # p.setJointMotorControl2(hand, 29, p.POSITION_CONTROL, radians(finger_value[8]))
+                            p.setJointMotorControl2(hand, 25, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 27, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 29, p.POSITION_CONTROL, radians(30.0))
                             #ringpos
-                            p.setJointMotorControl2(hand, 32, p.POSITION_CONTROL, radians(finger_value[9]))
-                            p.setJointMotorControl2(hand, 34, p.POSITION_CONTROL, radians(finger_value[10]))
-                            p.setJointMotorControl2(hand, 36, p.POSITION_CONTROL, radians(finger_value[11]))
+                            # p.setJointMotorControl2(hand, 33, p.POSITION_CONTROL, radians(finger_value[9]))
+                            # p.setJointMotorControl2(hand, 35, p.POSITION_CONTROL, radians(finger_value[10]))
+                            # p.setJointMotorControl2(hand, 37, p.POSITION_CONTROL, radians(finger_value[11]))
+                            p.setJointMotorControl2(hand, 33, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 35, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 37, p.POSITION_CONTROL, radians(30.0))
                             #pink
-                            p.setJointMotorControl2(hand, 40, p.POSITION_CONTROL, radians(finger_value[12]))
-                            p.setJointMotorControl2(hand, 42, p.POSITION_CONTROL, radians(finger_value[13]))
-                            p.setJointMotorControl2(hand, 44, p.POSITION_CONTROL, radians(finger_value[14]))
+                            # p.setJointMotorControl2(hand, 41, p.POSITION_CONTROL, radians(finger_value[12]))
+                            # p.setJointMotorControl2(hand, 43, p.POSITION_CONTROL, radians(finger_value[13]))
+                            # p.setJointMotorControl2(hand, 45, p.POSITION_CONTROL, radians(finger_value[14]))
+                            p.setJointMotorControl2(hand, 41, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 43, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 45, p.POSITION_CONTROL, radians(30.0))
                             
                             # print(middle)
                             # print(pink)

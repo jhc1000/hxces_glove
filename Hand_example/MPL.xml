@@ -183,7 +183,7 @@
 		  				    <!-- ======= MIDDLE ======= -->
                             <body name="middle0" pos="-0.012814 -0.0779014 0.00544608" quat="-3.14 0.0436194 0 0">
                                 <inertial pos="-0.000142567 -0.00548493 0.000206162" quat="0.699131 0.714862 -0.000723874 0.013694" mass="0.00295579" diaginertia="4.22461e-007 4.02281e-007 1.93868e-007" />
-                                <!--<joint name="middle0" type="hinge" pos="0 0 0" range="-0.345 0" axis="0 0 -1" />-->
+                                <joint name="middle0" type="hinge" pos="0 0 0" range="-0.345 0" axis="0 0 -1" />
                                 <geom type="mesh" mesh="middle0"/>
                                 <body name="middle1" pos="6.26e-005 -0.018 0">
                                     <inertial pos="0.000406411 -0.0213125 0.00065565" quat="0.698451 0.715642 -0.00415503 0.00230486" mass="0.00478229" diaginertia="8.18595e-007 7.9569e-007 3.06253e-007" />
