@@ -149,7 +149,8 @@ def load_environment(client_id):
 
     # some object
     sphere_id = p.loadURDF(
-        os.path.join(pybullet_data.getDataPath(),"sphere_small.urdf"),basePosition=[0.0,-0.2,0.15], useFixedBase=True, physicsClientId=client_id
+        os.path.join(pybullet_data.getDataPath(),"sphere_small.urdf"),basePosition=[0.0,-0.2,0.15], globalScaling=1*1.5,
+        useFixedBase=True, physicsClientId=client_id, 
     )
 
     # store body indices in a dict with more convenient key names
@@ -409,17 +410,17 @@ def main():
                 for k in key.keys():
                     hand_po = p.getBasePositionAndOrientation(hand)
                     if k == 65296: #left 
-                        p.changeConstraint(hand_cid,(hand_po[0][0]+move,hand_po[0][1],hand_po[0][2]),ho, maxForce=tinyForce)
+                        p.changeConstraint(hand_cid,(hand_po[0][0]+move,hand_po[0][1],hand_po[0][2]),ho, maxForce=200)
                     elif k == 65295: #right        
-                        p.changeConstraint(hand_cid,(hand_po[0][0]-move,hand_po[0][1],hand_po[0][2]),ho, maxForce=tinyForce)
+                        p.changeConstraint(hand_cid,(hand_po[0][0]-move,hand_po[0][1],hand_po[0][2]),ho, maxForce=200)
                     elif k == 65297: #up        
-                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]+move,hand_po[0][2]),ho, maxForce=tinyForce)
+                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]+move,hand_po[0][2]),ho, maxForce=200)
                     elif k == 65298: #down         
-                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]-move,hand_po[0][2]),ho, maxForce=tinyForce)
+                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]-move,hand_po[0][2]),ho, maxForce=200)
                     elif k == 44: #< 4 key       
-                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]+move),ho, maxForce=tinyForce)            
+                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]+move),ho, maxForce=200)            
                     elif k == 46: #> 5 key           
-                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]-move),ho, maxForce=tinyForce)
+                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]-move),ho, maxForce=200)
                 
                 if ser.inWaiting():
                     # read serial data from esp32
