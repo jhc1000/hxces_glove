@@ -149,7 +149,7 @@ def load_environment(client_id):
 
     # some object
     sphere_id = p.loadURDF(
-        os.path.join(pybullet_data.getDataPath(),"sphere_small.urdf"),basePosition=[0.0,-0.2,0.15], globalScaling=1*1.5,
+        os.path.join(pybullet_data.getDataPath(),"sphere_small.urdf"),basePosition=[0.0,-0.2,0.15], globalScaling=1*1.0,
         useFixedBase=True, physicsClientId=client_id, 
     )
 
@@ -452,40 +452,40 @@ def main():
 
                             #thumb
                             p.setJointMotorControl2(hand, 7, p.POSITION_CONTROL, pi/2)
-                            # p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, radians(finger_value[0]))
-                            # p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, radians(finger_value[1]))
-                            # p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, radians(finger_value[2]))
-                            p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, radians(30.0))
-                            p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, radians(30.0))
-                            p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, radians(finger_value[0]-INI_FINGER_VALUE[0]))
+                            p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, radians(finger_value[1]-INI_FINGER_VALUE[1]))
+                            p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, radians(finger_value[2]-INI_FINGER_VALUE[2]))
+                            # p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, radians(30.0))
+                            # p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, radians(30.0))
+                            # p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, radians(30.0))
                             #index
-                            # p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians(finger_value[3]))
-                            # p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(finger_value[4]))
-                            # p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(finger_value[5]))
-                            p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians(30.0))
-                            p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(30.0))
-                            p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians(finger_value[3]-INI_FINGER_VALUE[3]))
+                            p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(finger_value[4]-INI_FINGER_VALUE[4]))
+                            p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(finger_value[5]-INI_FINGER_VALUE[5]))
+                            # p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians(30.0))
+                            # p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(30.0))
+                            # p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(30.0))
                             #middle
-                            # p.setJointMotorControl2(hand, 25, p.POSITION_CONTROL, radians(finger_value[6]))
-                            # p.setJointMotorControl2(hand, 27, p.POSITION_CONTROL, radians(finger_value[7]))
-                            # p.setJointMotorControl2(hand, 29, p.POSITION_CONTROL, radians(finger_value[8]))
-                            p.setJointMotorControl2(hand, 25, p.POSITION_CONTROL, radians(30.0))
-                            p.setJointMotorControl2(hand, 27, p.POSITION_CONTROL, radians(30.0))
-                            p.setJointMotorControl2(hand, 29, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 25, p.POSITION_CONTROL, radians(finger_value[6]-INI_FINGER_VALUE[6]))
+                            p.setJointMotorControl2(hand, 27, p.POSITION_CONTROL, radians(finger_value[7]-INI_FINGER_VALUE[7]))
+                            p.setJointMotorControl2(hand, 29, p.POSITION_CONTROL, radians(finger_value[8]-INI_FINGER_VALUE[8]))
+                            # p.setJointMotorControl2(hand, 25, p.POSITION_CONTROL, radians(30.0))
+                            # p.setJointMotorControl2(hand, 27, p.POSITION_CONTROL, radians(30.0))
+                            # p.setJointMotorControl2(hand, 29, p.POSITION_CONTROL, radians(30.0))
                             #ringpos
-                            # p.setJointMotorControl2(hand, 33, p.POSITION_CONTROL, radians(finger_value[9]))
-                            # p.setJointMotorControl2(hand, 35, p.POSITION_CONTROL, radians(finger_value[10]))
-                            # p.setJointMotorControl2(hand, 37, p.POSITION_CONTROL, radians(finger_value[11]))
-                            p.setJointMotorControl2(hand, 33, p.POSITION_CONTROL, radians(30.0))
-                            p.setJointMotorControl2(hand, 35, p.POSITION_CONTROL, radians(30.0))
-                            p.setJointMotorControl2(hand, 37, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 33, p.POSITION_CONTROL, radians(finger_value[9]-INI_FINGER_VALUE[9]))
+                            p.setJointMotorControl2(hand, 35, p.POSITION_CONTROL, radians(finger_value[10]-INI_FINGER_VALUE[10]))
+                            p.setJointMotorControl2(hand, 37, p.POSITION_CONTROL, radians(finger_value[11]-INI_FINGER_VALUE[11]))
+                            # p.setJointMotorControl2(hand, 33, p.POSITION_CONTROL, radians(30.0))
+                            # p.setJointMotorControl2(hand, 35, p.POSITION_CONTROL, radians(30.0))
+                            # p.setJointMotorControl2(hand, 37, p.POSITION_CONTROL, radians(30.0))
                             #pink
-                            # p.setJointMotorControl2(hand, 41, p.POSITION_CONTROL, radians(finger_value[12]))
-                            # p.setJointMotorControl2(hand, 43, p.POSITION_CONTROL, radians(finger_value[13]))
-                            # p.setJointMotorControl2(hand, 45, p.POSITION_CONTROL, radians(finger_value[14]))
-                            p.setJointMotorControl2(hand, 41, p.POSITION_CONTROL, radians(30.0))
-                            p.setJointMotorControl2(hand, 43, p.POSITION_CONTROL, radians(30.0))
-                            p.setJointMotorControl2(hand, 45, p.POSITION_CONTROL, radians(30.0))
+                            p.setJointMotorControl2(hand, 41, p.POSITION_CONTROL, radians(finger_value[12]-INI_FINGER_VALUE[12]))
+                            p.setJointMotorControl2(hand, 43, p.POSITION_CONTROL, radians(finger_value[13]-INI_FINGER_VALUE[13]))
+                            p.setJointMotorControl2(hand, 45, p.POSITION_CONTROL, radians(finger_value[14]-INI_FINGER_VALUE[14]))
+                            # p.setJointMotorControl2(hand, 41, p.POSITION_CONTROL, radians(30.0))
+                            # p.setJointMotorControl2(hand, 43, p.POSITION_CONTROL, radians(30.0))
+                            # p.setJointMotorControl2(hand, 45, p.POSITION_CONTROL, radians(30.0))
                             
                             # print(middle)
                             # print(pink)
