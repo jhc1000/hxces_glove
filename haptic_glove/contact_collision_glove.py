@@ -87,7 +87,7 @@ def get_key_pressed():
             pressed_keys.append(key)
         return pressed_keys
 
-CollisionList_init = [[0.0,0.0,0.3,0.0,0.0,0.0,1.0]] #,[0.600,0,0,1.5,3.5,1,0],[0.700,0,0,1.5,3.5,1,0]]
+CollisionList_init = [[0.0,-0.2,0.15,0.0,0.0,0.0,1.0]] #,[0.600,0,0,1.5,3.5,1,0],[0.700,0,0,1.5,3.5,1,0]]
 
 ConstraintLoadList = []
 CollisionLoadList = []
@@ -98,7 +98,7 @@ def init_collision(CollisionList):
         pos = temp_CollisionList[0:3]
         orient = temp_CollisionList[3:7]
 
-        CollisionLoadList.append(p.loadURDF(os.path.join(pybullet_data.getDataPath(),"sphere_small.urdf"),pos,orient))
+        CollisionLoadList.append(p.loadURDF(os.path.join(pybullet_data.getDataPath(),"sphere_small.urdf"),pos,orient,useFixedBase=True, globalScaling=1*1.0,))
         ConstraintLoadList.append(p.createConstraint(CollisionLoadList[count], -1, -1, -1, p.JOINT_FIXED, [0, 0, 0],parentFramePosition=[0,0,0],childFramePosition=pos,childFrameOrientation=orient))
 
 
@@ -118,7 +118,7 @@ def load_environment(client_id):
     p.resetDebugVisualizerCamera(
         cameraDistance=1,
         cameraYaw=-90,
-        cameraPitch=-45,
+        cameraPitch=-10,
         cameraTargetPosition=[0,-0.2,0.0]
     )
 
@@ -141,10 +141,10 @@ def load_environment(client_id):
     # hand_id = p.loadMJCF("C:\\Users\\wowjy\\.mujoco\\mujoco237\\Hand_example\\MPL.xml", physicsClientId=client_id)
 
     hand = hand_id[0]
-    hand_cid = p.createConstraint(hand,-1,-1,-1,p.JOINT_FIXED,[0,0,0],[0,0,0],[0,0,0], physicsClientId=client_id)
+    hand_cid = p.createConstraint(hand,-1,-1,-1,p.JOINT_FIXED,[0,0,0],[0,0,0],[0,0,1], physicsClientId=client_id)
     hand_po = p.getBasePositionAndOrientation(hand, physicsClientId=client_id)
     ho = p.getQuaternionFromEuler([0.0, 0.0, pi], physicsClientId=client_id)
-    p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho, maxForce=200, physicsClientId=client_id)
+    p.changeConstraint(hand_cid,(0.0156,-0.365,0.242),ho, physicsClientId=client_id)
     robot = pyb_utils.Robot(hand, client_id=client_id)
 
     # some object
@@ -205,7 +205,8 @@ def main():
 
     p.setRealTimeSimulation(1)
 
-    # init_collision(CollisionList_init)
+    # contact collision
+    init_collision(CollisionList_init)
 
     # create user debug parameters
     collision_margin_param_gui = p.addUserDebugParameter(
@@ -280,11 +281,11 @@ def main():
                 # main GUI sim to check if that configuration is in collision
 
                 # col_robot.reset_joint_configuration(q)
-                print(col_detector1.compute_distances())
-                print(col_detector2.compute_distances())
-                print(col_detector3.compute_distances())
-                print(col_detector4.compute_distances())
-                print(col_detector5.compute_distances())
+                # print(col_detector1.compute_distances())
+                # print(col_detector2.compute_distances())
+                # print(col_detector3.compute_distances())
+                # print(col_detector4.compute_distances())
+                # print(col_detector5.compute_distances())
 
                 if not col_detector1.in_collision(
                     margin=p.readUserDebugParameter(collision_margin_param_gui),
@@ -295,7 +296,7 @@ def main():
                     col_finger_value[0] = 1
                     p.addUserDebugText(
                         "Thumb collision",
-                        textPosition=[0, 0, 0.4],
+                        textPosition=[0, 0, 0.275],
                         textColorRGB=[255, 0, 0],
                         textSize=2,
                     lifeTime=0.2,
@@ -311,7 +312,7 @@ def main():
                     col_finger_value[1] = 1
                     p.addUserDebugText(
                         "Index collision",
-                        textPosition=[0, 0, 0.3],
+                        textPosition=[0, 0, 0.25],
                         textColorRGB=[255, 0, 0],
                         textSize=2,
                     lifeTime=0.2,
@@ -327,7 +328,7 @@ def main():
                     col_finger_value[2] = 1
                     p.addUserDebugText(
                         "Middle collision",
-                        textPosition=[0, 0, 0.2],
+                        textPosition=[0, 0, 0.225],
                         textColorRGB=[255, 0, 0],
                         textSize=2,
                     lifeTime=0.2,
@@ -343,7 +344,7 @@ def main():
                     col_finger_value[3] = 1
                     p.addUserDebugText(
                         "Ring collision",
-                        textPosition=[0, 0, 0.1],
+                        textPosition=[0, 0, 0.2],
                         textColorRGB=[255, 0, 0],
                         textSize=2,
                     lifeTime=0.2,
@@ -359,7 +360,7 @@ def main():
                     col_finger_value[4] = 1
                     p.addUserDebugText(
                         "Pinky collision",
-                        textPosition=[0, 0, 0],
+                        textPosition=[0, 0, 0.175],
                         textColorRGB=[255, 0, 0],
                         textSize=2,
                     lifeTime=0.2,
@@ -394,15 +395,73 @@ def main():
                 time.sleep(TIMESTEP)
 
                 # contact detection
-                # for count in range(0,len(CollisionLoadList),1):
-                #     cont_pts =p.getContactPoints(hand,CollisionLoadList[count])
+                for count in range(0,len(CollisionLoadList),1):
+                    cont_pts =p.getContactPoints(hand,CollisionLoadList[count])
 
                 # print(cont_pts)
                 # print(len(cont_pts))
-                # if(len(cont_pts) > 0):
-                #     print("Collision")
-                # else:
-                #     print("no collision")
+                for i in range(4):
+                    col_finger_value[i] = 0
+
+                if(len(cont_pts) > 0):
+                    print("Collision")
+                    for i in range(len(cont_pts)):
+                        print(cont_pts[i][3])
+
+                        if cont_pts[i][3] == 14:
+                            col_finger_value[0] = 1
+                            p.addUserDebugText(
+                                "Thumb collision",
+                                textPosition=[0, 0, 0.275],
+                                textColorRGB=[255, 0, 0],
+                                textSize=2,
+                                lifeTime=0.2,
+                                )
+
+                        elif cont_pts[i][3] == 22:
+                            col_finger_value[1] = 1
+                            p.addUserDebugText(
+                            "Index collision",
+                            textPosition=[0, 0, 0.25],
+                            textColorRGB=[255, 0, 0],
+                            textSize=2,
+                            lifeTime=0.2,
+                            )
+
+                        elif cont_pts[i][3] == 30:
+                            col_finger_value[2] = 1
+                            p.addUserDebugText(
+                                "Middle collision",
+                                textPosition=[0, 0, 0.225],
+                                textColorRGB=[255, 0, 0],
+                                textSize=2,
+                                lifeTime=0.2,
+                                )
+
+                        elif cont_pts[i][3] == 38:
+                            col_finger_value[3] = 1
+                            p.addUserDebugText(
+                                "Ring collision",
+                                textPosition=[0, 0, 0.2],
+                                textColorRGB=[255, 0, 0],
+                                textSize=2,
+                                lifeTime=0.2,
+                                )
+
+                        elif cont_pts[i][3] == 46:
+                            col_finger_value[4] = 1
+                            p.addUserDebugText(
+                                "Pinky collision",
+                                textPosition=[0, 0, 0.175],
+                                textColorRGB=[255, 0, 0],
+                                textSize=2,
+                                lifeTime=0.2,
+                                )
+
+                     
+
+                else:
+                    print("no collision")
 
                 # keyboard input
                 key = p.getKeyboardEvents()
@@ -410,17 +469,17 @@ def main():
                 for k in key.keys():
                     hand_po = p.getBasePositionAndOrientation(hand)
                     if k == 65296: #left 
-                        p.changeConstraint(hand_cid,(hand_po[0][0]+move,hand_po[0][1],hand_po[0][2]),ho, maxForce=200)
+                        p.changeConstraint(hand_cid,(hand_po[0][0]+move,hand_po[0][1],hand_po[0][2]),ho, )
                     elif k == 65295: #right        
-                        p.changeConstraint(hand_cid,(hand_po[0][0]-move,hand_po[0][1],hand_po[0][2]),ho, maxForce=200)
+                        p.changeConstraint(hand_cid,(hand_po[0][0]-move,hand_po[0][1],hand_po[0][2]),ho, )
                     elif k == 65297: #up        
-                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]+move,hand_po[0][2]),ho, maxForce=200)
+                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]+move,hand_po[0][2]),ho, )
                     elif k == 65298: #down         
-                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]-move,hand_po[0][2]),ho, maxForce=200)
+                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1]-move,hand_po[0][2]),ho, )
                     elif k == 44: #< 4 key       
-                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]+move),ho, maxForce=200)            
+                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]+move),ho, )            
                     elif k == 46: #> 5 key           
-                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]-move),ho, maxForce=200)
+                        p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]-move),ho, )
                 
                 if ser.inWaiting():
                     # read serial data from esp32
@@ -439,6 +498,7 @@ def main():
                         # print(finger_value)
                         if (len(finger_value) == 15):
                             print(finger_value)
+                            print(p.getBasePositionAndOrientation(hand, physicsClientId=gui_id)[0])
                             # if sensor value is converted
                             # pink = convertSensor(finger_value[0], pinkId)
                             # ringpos = convertSensor(finger_value[1], ringposId)
@@ -447,7 +507,8 @@ def main():
                             # thumb = convertSensor(finger_value[4], thumbId)
                             
                             #others
-                            for count in range(45):
+                            # print(p.getNumJoints(hand))
+                            for count in range(p.getNumJoints(hand)):
                                 p.setJointMotorControl2(hand, count, p.POSITION_CONTROL, 0.0)
 
                             #thumb
