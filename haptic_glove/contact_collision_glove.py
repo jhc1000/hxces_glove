@@ -49,6 +49,8 @@ thumbId = 4
 #fingerValue
 finger_value = [INI_0_INT for i in range(15)]
 col_finger_value = [INI_0_INT for i in range(5)]
+past_finger_value = [[INI_0_INT for i in range(10)] for i in range(15)]
+iteration = INI_0_INT
 
 def getSerialOrNone(portname):
   try:
@@ -137,7 +139,7 @@ def load_environment(client_id):
     global robot
 
     # hand_id = p.loadMJCF('D:\주형찬\한양대\Rodel\HX-CES\hxces_glove\Hand_example\MPL.xml', physicsClientId=client_id)
-    hand_id = p.loadMJCF('/home/chan/hxces_glove/Hand_example', physicsClientId=client_id)
+    hand_id = p.loadMJCF('/home/chan/hxces_glove/Hand_example/MPL.xml', physicsClientId=client_id)
     # hand_id = p.loadMJCF("C:\\Users\\wowjy\\.mujoco\\mujoco237\\Hand_example\\MPL.xml", physicsClientId=client_id)
 
     hand = hand_id[0]
@@ -189,6 +191,8 @@ def read_robot_params_gui(robot_params_gui, client_id):
 
 
 def main():
+    iteration = INI_0_INT
+
     # main simulation server, with a GUI
     gui_id = p.connect(p.GUI)
 
@@ -238,17 +242,17 @@ def main():
     # col_detector3 = pyb_utils.CollisionDetector(col_id, [(link3, sphere)])
     # col_detector4 = pyb_utils.CollisionDetector(col_id, [(link4, sphere)])
     # col_detector5 = pyb_utils.CollisionDetector(col_id, [(link5, sphere)])
-    col_detector1 = pyb_utils.CollisionDetector(gui_id, [(link1, sphere)])
-    col_detector2 = pyb_utils.CollisionDetector(gui_id, [(link2, sphere)])
-    col_detector3 = pyb_utils.CollisionDetector(gui_id, [(link3, sphere)])
-    col_detector4 = pyb_utils.CollisionDetector(gui_id, [(link4, sphere)])
-    col_detector5 = pyb_utils.CollisionDetector(gui_id, [(link5, sphere)])
-    print(col_detector1)
-    print(col_detector2)
-    print(col_detector3)
-    print(col_detector4)
-    print(col_detector5)
-    last_dists = 0
+    # col_detector1 = pyb_utils.CollisionDetector(gui_id, [(link1, sphere)])
+    # col_detector2 = pyb_utils.CollisionDetector(gui_id, [(link2, sphere)])
+    # col_detector3 = pyb_utils.CollisionDetector(gui_id, [(link3, sphere)])
+    # col_detector4 = pyb_utils.CollisionDetector(gui_id, [(link4, sphere)])
+    # col_detector5 = pyb_utils.CollisionDetector(gui_id, [(link5, sphere)])
+    # print(col_detector1)
+    # print(col_detector2)
+    # print(col_detector3)
+    # print(col_detector4)
+    # print(col_detector5)
+    # last_dists = 0
 
     ser = None
     portindex = 0
@@ -287,110 +291,110 @@ def main():
                 # print(col_detector4.compute_distances())
                 # print(col_detector5.compute_distances())
 
-                if not col_detector1.in_collision(
-                    margin=p.readUserDebugParameter(collision_margin_param_gui),
-                ):
-                    # robot.reset_joint_configuration(q)
-                    col_finger_value[0] = 0
-                else:
-                    col_finger_value[0] = 1
-                    p.addUserDebugText(
-                        "Thumb collision",
-                        textPosition=[0, 0, 0.275],
-                        textColorRGB=[255, 0, 0],
-                        textSize=2,
-                    lifeTime=0.2,
-                    )
+                # if not col_detector1.in_collision(
+                #     margin=p.readUserDebugParameter(collision_margin_param_gui),
+                # ):
+                #     # robot.reset_joint_configuration(q)
+                #     col_finger_value[0] = 0
+                # else:
+                #     col_finger_value[0] = 1
+                #     p.addUserDebugText(
+                #         "Thumb collision",
+                #         textPosition=[0, 0, 0.275],
+                #         textColorRGB=[255, 0, 0],
+                #         textSize=2,
+                #     lifeTime=0.2,
+                #     )
                 
-                # col_robot.reset_joint_configuration(q)
-                if not col_detector2.in_collision(
-                    margin=p.readUserDebugParameter(collision_margin_param_gui),
-                ):
-                    # robot.reset_joint_configuration(q)
-                    col_finger_value[1] = 0
-                else:
-                    col_finger_value[1] = 1
-                    p.addUserDebugText(
-                        "Index collision",
-                        textPosition=[0, 0, 0.25],
-                        textColorRGB=[255, 0, 0],
-                        textSize=2,
-                    lifeTime=0.2,
-                    )
+                # # col_robot.reset_joint_configuration(q)
+                # if not col_detector2.in_collision(
+                #     margin=p.readUserDebugParameter(collision_margin_param_gui),
+                # ):
+                #     # robot.reset_joint_configuration(q)
+                #     col_finger_value[1] = 0
+                # else:
+                #     col_finger_value[1] = 1
+                #     p.addUserDebugText(
+                #         "Index collision",
+                #         textPosition=[0, 0, 0.25],
+                #         textColorRGB=[255, 0, 0],
+                #         textSize=2,
+                #     lifeTime=0.2,
+                #     )
 
-                # col_robot.reset_joint_configuration(q)
-                if not col_detector3.in_collision(
-                    margin=p.readUserDebugParameter(collision_margin_param_gui),
-                ):
-                    # robot.reset_joint_configuration(q)
-                    col_finger_value[2] = 0
-                else:
-                    col_finger_value[2] = 1
-                    p.addUserDebugText(
-                        "Middle collision",
-                        textPosition=[0, 0, 0.225],
-                        textColorRGB=[255, 0, 0],
-                        textSize=2,
-                    lifeTime=0.2,
-                    )
+                # # col_robot.reset_joint_configuration(q)
+                # if not col_detector3.in_collision(
+                #     margin=p.readUserDebugParameter(collision_margin_param_gui),
+                # ):
+                #     # robot.reset_joint_configuration(q)
+                #     col_finger_value[2] = 0
+                # else:
+                #     col_finger_value[2] = 1
+                #     p.addUserDebugText(
+                #         "Middle collision",
+                #         textPosition=[0, 0, 0.225],
+                #         textColorRGB=[255, 0, 0],
+                #         textSize=2,
+                #     lifeTime=0.2,
+                #     )
 
-                # col_robot.reset_joint_configuration(q)
-                if not col_detector4.in_collision(
-                    margin=p.readUserDebugParameter(collision_margin_param_gui),
-                ):
-                    # robot.reset_joint_configuration(q)
-                    col_finger_value[3] = 0
-                else:
-                    col_finger_value[3] = 1
-                    p.addUserDebugText(
-                        "Ring collision",
-                        textPosition=[0, 0, 0.2],
-                        textColorRGB=[255, 0, 0],
-                        textSize=2,
-                    lifeTime=0.2,
-                    )
+                # # col_robot.reset_joint_configuration(q)
+                # if not col_detector4.in_collision(
+                #     margin=p.readUserDebugParameter(collision_margin_param_gui),
+                # ):
+                #     # robot.reset_joint_configuration(q)
+                #     col_finger_value[3] = 0
+                # else:
+                #     col_finger_value[3] = 1
+                #     p.addUserDebugText(
+                #         "Ring collision",
+                #         textPosition=[0, 0, 0.2],
+                #         textColorRGB=[255, 0, 0],
+                #         textSize=2,
+                #     lifeTime=0.2,
+                #     )
 
-                # col_robot.reset_joint_configuration(q)
-                if not col_detector5.in_collision(
-                    margin=p.readUserDebugParameter(collision_margin_param_gui),
-                ):
-                    # robot.reset_joint_configuration(q)
-                    col_finger_value[4] = 0
-                else:
-                    col_finger_value[4] = 1
-                    p.addUserDebugText(
-                        "Pinky collision",
-                        textPosition=[0, 0, 0.175],
-                        textColorRGB=[255, 0, 0],
-                        textSize=2,
-                    lifeTime=0.2,
-                    )
+                # # col_robot.reset_joint_configuration(q)
+                # if not col_detector5.in_collision(
+                #     margin=p.readUserDebugParameter(collision_margin_param_gui),
+                # ):
+                #     # robot.reset_joint_configuration(q)
+                #     col_finger_value[4] = 0
+                # else:
+                #     col_finger_value[4] = 1
+                #     p.addUserDebugText(
+                #         "Pinky collision",
+                #         textPosition=[0, 0, 0.175],
+                #         textColorRGB=[255, 0, 0],
+                #         textSize=2,
+                #     lifeTime=0.2,
+                #     )
 
-                # compute shortest distances for user-selected configuration
-                dists1 = col_detector1.compute_distances()
-                if not np.allclose(last_dists, dists1):
-                    # print(f"Thumb to obstacles = {dists1}")
-                    last_dists = dists1
+                # # compute shortest distances for user-selected configuration
+                # dists1 = col_detector1.compute_distances()
+                # if not np.allclose(last_dists, dists1):
+                #     # print(f"Thumb to obstacles = {dists1}")
+                #     last_dists = dists1
                 
-                dists2 = col_detector2.compute_distances()
-                if not np.allclose(last_dists, dists2):
-                    # print(f"Index to obstacles = {dists2}")
-                    last_dists = dists2
+                # dists2 = col_detector2.compute_distances()
+                # if not np.allclose(last_dists, dists2):
+                #     # print(f"Index to obstacles = {dists2}")
+                #     last_dists = dists2
 
-                dists3 = col_detector3.compute_distances()
-                if not np.allclose(last_dists, dists3):
-                    # print(f"Middle to obstacles = {dists3}")
-                    last_dists = dists3
+                # dists3 = col_detector3.compute_distances()
+                # if not np.allclose(last_dists, dists3):
+                #     # print(f"Middle to obstacles = {dists3}")
+                #     last_dists = dists3
 
-                dists4 = col_detector4.compute_distances()
-                if not np.allclose(last_dists, dists4):
-                    # print(f"Ring to obstacles = {dists4}")
-                    last_dists = dists4
+                # dists4 = col_detector4.compute_distances()
+                # if not np.allclose(last_dists, dists4):
+                #     # print(f"Ring to obstacles = {dists4}")
+                #     last_dists = dists4
 
-                dists5 = col_detector5.compute_distances()
-                if not np.allclose(last_dists, dists5):
-                    # print(f"Pinky to obstacles = {dists5}")
-                    last_dists = dists5
+                # dists5 = col_detector5.compute_distances()
+                # if not np.allclose(last_dists, dists5):
+                #     # print(f"Pinky to obstacles = {dists5}")
+                #     last_dists = dists5
 
                 time.sleep(TIMESTEP)
 
@@ -400,7 +404,7 @@ def main():
 
                 # print(cont_pts)
                 # print(len(cont_pts))
-                for i in range(4):
+                for i in range(5):
                     col_finger_value[i] = 0
 
                 if(len(cont_pts) > 0):
@@ -497,14 +501,31 @@ def main():
                             finger_value[i] = int(words[i])
                         # print(finger_value)
                         if (len(finger_value) == 15):
-                            print(finger_value)
-                            print(p.getBasePositionAndOrientation(hand, physicsClientId=gui_id)[0])
+                            # print(finger_value)
+                            # print(p.getBasePositionAndOrientation(hand, physicsClientId=gui_id)[0])
                             # if sensor value is converted
                             # pink = convertSensor(finger_value[0], pinkId)
                             # ringpos = convertSensor(finger_value[1], ringposId)
                             # middle = convertSensor(finger_value[2], middleId)
                             # index = convertSensor(finger_value[3], indexId)
                             # thumb = convertSensor(finger_value[4], thumbId)
+
+                            # filtering value
+                            if iteration == 10:
+                                for i in range(15):
+                                    for j in range(10-1):
+                                        past_finger_value[i][j] = past_finger_value[i][j+1]
+                                    if abs(finger_value[i]-past_finger_value[i][9]) > 20:
+                                        finger_value[i] = past_finger_value[i][9]
+                                    past_finger_value[i][0] = finger_value[i]
+                                    finger_value[i] = sum(past_finger_value[i])/10
+                                
+                                
+                            else:
+                                for i in range(15):
+                                    past_finger_value[i][iteration] = finger_value[i]
+                                iteration += 1
+                            print(finger_value)
                             
                             #others
                             # print(p.getNumJoints(hand))

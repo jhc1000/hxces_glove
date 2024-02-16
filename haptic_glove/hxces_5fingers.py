@@ -156,11 +156,11 @@ if (ser is not None and ser.isOpen()):
                     finger_value[i] = past_finger_value[i][9]
                   past_finger_value[i][0] = finger_value[i]
                   finger_value[i] = sum(past_finger_value[i])/10
-                  
-                
+                                
+                                
               else:
                 for i in range(15):
-                  past_finger_value[i][iteration] = finger_value[iteration]
+                  past_finger_value[i][iteration] = finger_value[i]
                 iteration += 1
               print(finger_value)
 

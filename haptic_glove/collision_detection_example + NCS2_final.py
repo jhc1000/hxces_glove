@@ -23,11 +23,7 @@ INI_0_FLOAT = 0.0
 INI_0_INT = 0
 TIMESTEP = 1.0 / 60
 
-INI_FINGER_VALUE = [0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0]
+INI_FINGER_VALUE = [INI_0_FLOAT for i in range(15)]
 
 # tinyForce= 2*10e-7
 tinyForce= 20
@@ -49,6 +45,7 @@ thumbId = 4
 #fingerValue
 finger_value = [INI_0_INT for i in range(15)]
 col_finger_value = [INI_0_INT for i in range(5)]
+past_finger_value = [[INI_0_INT for i in range(10)] for i in range(15)]
 
 def getSerialOrNone(portname):
   try:
@@ -174,6 +171,7 @@ def read_robot_params_gui(robot_params_gui, client_id):
 
 
 def main():
+    iteration = INI_0_INT
     # main simulation server, with a GUI
     gui_id = p.connect(p.GUI)
 
@@ -391,7 +389,7 @@ def main():
                         # print(words)
                         for i in range(len(words)):
                             finger_value[i] = int(words[i])
-                        print(finger_value)
+                        # print(finger_value)
                         if (len(finger_value) == 15):
                             # if sensor value is converted
                             # pink = convertSensor(finger_value[0], pinkId)
@@ -399,6 +397,22 @@ def main():
                             # middle = convertSensor(finger_value[2], middleId)
                             # index = convertSensor(finger_value[3], indexId)
                             # thumb = convertSensor(finger_value[4], thumbId)
+                            # filtering value
+                            if iteration == 10:
+                                for i in range(15):
+                                    for j in range(10-1):
+                                        past_finger_value[i][j] = past_finger_value[i][j+1]
+                                    if abs(finger_value[i]-past_finger_value[i][9]) > 20:
+                                        finger_value[i] = past_finger_value[i][9]
+                                    past_finger_value[i][0] = finger_value[i]
+                                    finger_value[i] = sum(past_finger_value[i])/10
+                                
+                                
+                            else:
+                                for i in range(15):
+                                    past_finger_value[i][iteration] = finger_value[i]
+                                iteration += 1
+                            print(finger_value)
 
                             #thumb
                             p.setJointMotorControl2(hand, 7, p.POSITION_CONTROL, radians(finger_value[0]))
