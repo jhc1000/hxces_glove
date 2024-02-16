@@ -137,7 +137,7 @@ def load_environment(client_id):
     global robot
 
     # hand_id = p.loadMJCF('D:\주형찬\한양대\Rodel\HX-CES\hxces_glove\Hand_example\MPL.xml', physicsClientId=client_id)
-    hand_id = p.loadMJCF('/home/chan/rodel/hxces_glove/Hand_example/MPL.xml', physicsClientId=client_id)
+    hand_id = p.loadMJCF('/home/chan/hxces_glove/Hand_example', physicsClientId=client_id)
     # hand_id = p.loadMJCF("C:\\Users\\wowjy\\.mujoco\\mujoco237\\Hand_example\\MPL.xml", physicsClientId=client_id)
 
     hand = hand_id[0]

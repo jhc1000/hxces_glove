@@ -14,6 +14,7 @@ import os
 import math
 from math import pi
 import pyfirmata
+import numpy as np
 
 import sys
 from select import select
@@ -49,7 +50,7 @@ objectUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"random_urdfs/00
 
 #load the MuJoCo MJCF hand
 # handUid = p.loadMJCF('D:\주형찬\한양대\Rodel\HX-CES\hxces_glove\Hand_example\MPL.xml')
-handUid = p.loadMJCF('/home/chan/rodel/hxces_glove/Hand_example/MPL.xml')
+handUid = p.loadMJCF('/home/chan/hxces_glove/Hand_example/MPL.xml')
 
 hand = handUid[0]
 #clamp in range 400-600
@@ -67,6 +68,8 @@ thumbId = 4
 
 #fingerValue
 finger_value = [INI_0_INT for i in range(15)]
+past_finger_value = [[INI_0_INT for i in range(10)] for i in range(15)]
+iteration = INI_0_INT
 
 p.setRealTimeSimulation(1)
 
@@ -136,13 +139,31 @@ if (ser is not None and ser.isOpen()):
             # print(words)
             for i in range(len(words)):
               finger_value[i] = int(words[i])
-            print(finger_value)
+            # print(finger_value)
             if (len(finger_value) == 15):
               pink = convertSensor(finger_value[0], pinkId)
               ringpos = convertSensor(finger_value[1], ringposId)
               middle = convertSensor(finger_value[2], middleId)
               index = convertSensor(finger_value[3], indexId)
               thumb = convertSensor(finger_value[4], thumbId)
+
+              # filtering value
+              if iteration == 10:
+                for i in range(15):
+                  for j in range(10-1):
+                    past_finger_value[i][j] = past_finger_value[i][j+1]
+                  if abs(finger_value[i]-past_finger_value[i][9]) > 20:
+                    finger_value[i] = past_finger_value[i][9]
+                  past_finger_value[i][0] = finger_value[i]
+                  finger_value[i] = sum(past_finger_value[i])/10
+                  
+                
+              else:
+                for i in range(15):
+                  past_finger_value[i][iteration] = finger_value[iteration]
+                iteration += 1
+              print(finger_value)
+
 
               p.setJointMotorControl2(hand, 7, p.POSITION_CONTROL, pi / 4.)
               p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, thumb + pi / 10)

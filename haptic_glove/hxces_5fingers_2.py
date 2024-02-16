@@ -50,7 +50,7 @@ objectUid = p.loadURDF(os.path.join(pybullet_data.getDataPath(),"sphere_small.ur
 
 #load the MuJoCo MJCF hand
 # handUid = p.loadMJCF('D:\주형찬\한양대\Rodel\HX-CES\hxces_glove\Hand_example\MPL.xml')
-handUid = p.loadMJCF('/home/chan/rodel/hxces_glove/Hand_example/MPL.xml')
+handUid = p.loadMJCF('/home/chan/hxces_glove/Hand_example/MPL.xml')
 # handUid = p.loadMJCF("C:\\Users\\wowjy\\.mujoco\\mujoco237\\Hand_example\\MPL.xml")
 
 hand = handUid[0]
