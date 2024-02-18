@@ -1,3 +1,5 @@
+//#include <Wire.h>
+//#include <L3G4200D.h>
 #include <ESP32Servo.h>
 // usable pin 4-8, 9-14, 1-35, 48-21 (28pins)
 
@@ -6,6 +8,23 @@ Servo servo[5];
 ESP32PWM pwm;
 int minUs = 400;
 int maxUs = 2500;
+
+// [IMU L3G4200D]
+//#define I2C_SDA 47
+//#define I2C_SCL 48
+
+//TwoWire I2C = TwoWire(0);
+
+//L3G4200D gyroscope;
+
+// Timers
+unsigned long timer = 0;
+float timeStep = 0.01;
+
+// Pitch, Roll and Yaw values
+float pitch = 0;
+float roll = 0;
+float yaw = 0;
 
 //serial over USB
 #define SERIAL_BAUD_RATE 115200
@@ -37,8 +56,9 @@ int servo_released[5] = {0,0,0,0,0};
 
 // [PIN]
 const int PIN_SERVO[5] = {36,38,40,42,1};
-const int PIN_FINGER[15] = {14,13,12,11,10,9,8,18,17,16,15,7,6,5,4};
+const int PIN_FINGER[12] = {14,13,12,11,10,9,8,18,17,16,15,7};
 const int PIN_ENC_SERVO[5] = {35,37,39,41,2};
+const int PIN_LED[3] = {6,5,4};
 
 // [Serial2]
 #define rx2 48
@@ -54,6 +74,7 @@ void decodeData(char* stringToDecode, int* hapticLimits);
 int getArgument(char* stringToDecode, char command);
 void setupInputs();
 void setupPWM();
+void setupIMU();
 void setServos(int degrees);
 int* getFingerPositions(bool calibrating, bool reset);
 int* getWirePositions(bool calibrating, bool reset);
@@ -84,9 +105,12 @@ void setup() {
 
   Serial2.begin(115200, SERIAL_8N1, rx2, tx2);
   Serial2.setTimeout(timeout);
+//    I2C.begin(I2C_SDA, I2C_SCL, 100000);
+//    Wire.begin(I2C_SDA, I2C_SCL);
 
   setupInputs();
   setupPWM();
+//  setupIMU();
 }
 
 void loop() {
@@ -113,8 +137,9 @@ void loop() {
   vTaskDelay(pdMS_TO_TICKS(5));
 
   rx_from_imu();
-  String imu_msg = "*," + String(euler[0]) + "," + String(euler[1]) + "," + String(euler[2]) + ",\n";
-  Serial.print(imu_msg);
+//  String imu_msg = "*," + String(euler[0]) + "," + String(euler[1]) + "," + String(euler[2]) + ",\n";
+//  Serial.print(imu_msg);
+  
 }
 
 void SERVO(void * parameter) {
@@ -123,16 +148,40 @@ void SERVO(void * parameter) {
       writeServoHaptics(hapticLimits);
       vTaskDelay(pdMS_TO_TICKS(10));
     #endif
+    
+//    // IMU
+//    timer = millis();
+//
+//    // Read normalized values
+//    Vector norm = gyroscope.readNormalize();
+//  
+//    // Calculate Pitch, Roll and Yaw
+//    pitch = pitch + norm.YAxis * timeStep;
+//    roll = roll + norm.XAxis * timeStep;
+//    yaw = yaw + norm.ZAxis * timeStep;
+//  
+//    // Output raw
+//    Serial.print(" Pitch = ");
+//    Serial.print(pitch);
+//    Serial.print(" Roll = ");
+//    Serial.print(roll);  
+//    Serial.print(" Yaw = ");
+//    Serial.println(yaw);
+//    String imu_msg = "*," + String(pitch) + "," + String(roll) + "," + String(yaw) + ",\n";
+//    Serial.print(imu_msg);
+//  
+//    // Wait to full timeStep period
+//    delay((timeStep*1000) - (millis() - timer));
   }
 }
 
 // functions
 char* encode(int* flexion) {
   static char stringToEncode[sizeof(MAXENCODE)];
-  sprintf(stringToEncode, "A,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+  sprintf(stringToEncode, "A,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f\n",
           flexion[0], flexion[1], flexion[2], flexion[3], flexion[4], flexion[5], flexion[6],
-          flexion[7], flexion[8], flexion[9], flexion[10], flexion[11], flexion[12], flexion[13],
-          flexion[14]);
+          flexion[7], flexion[8], flexion[9], flexion[10], flexion[11], 
+          euler[0], euler[1], euler[2]);
   return stringToEncode;
 }
 
@@ -155,12 +204,15 @@ int getArgument(char* stringToDecode, char command) {
 }
 
 void setupInputs() {
-  for (int i = 0; i < 15; i++) {
+  for (int i = 0; i < 12; i++) {
     pinMode(PIN_FINGER[i], INPUT);
   }
   for (int i = 0; i < 5; i++) {
     pinMode(PIN_ENC_SERVO[i], INPUT);
   } 
+  for (int i =0; i < 3; i++) {
+    pinMode(PIN_LED[i], OUTPUT);
+  }
 }
 
 void setupPWM() {
@@ -185,6 +237,19 @@ void setupPWM() {
   setServos(0);
 }
 
+//void setupIMU(){
+//  // Set scale 2000 dps and 400HZ Output data rate (cut-off 50)
+//  while(!gyroscope.begin(L3G4200D_SCALE_2000DPS, L3G4200D_DATARATE_400HZ_50))
+//  {
+//    Serial.println("Could not find a valid L3G4200D sensor, check wiring!");
+//    delay(500);
+//  }
+// 
+//  // Calibrate gyroscope. The calibration must be at rest.
+//  // If you don't want calibrate, comment this line.
+//  gyroscope.calibrate(100);
+//}
+
 void setServos(int degrees) {
     for(int i = 0; i < 5; ++i) {
         servo[i].write(degrees);
@@ -194,7 +259,7 @@ void setServos(int degrees) {
 
 int* getFingerPositions(bool calibrating, bool reset) {
   static int raw_finger_value[15];
-  for (int i = 0; i < 15; i++) {
+  for (int i = 0; i < 12; i++) {
     raw_finger_value[i] = map(analogRead(PIN_FINGER[i]), 0, ANALOG_MAX, ANGLE_MIN, ANGLE_MAX);
     // raw_finger_value[i] = analogRead(PIN_FINGER[i]);
     // Serial.print(raw_finger_value[i]);
@@ -234,16 +299,42 @@ int* getWirePositions(bool calibrating, bool reset) {
 
 void writeServoHaptics(int* hapticLimits) {
   
-  if (hapticLimits[0] > 0) servo[0].write(servo_fixed[0]);
-  else servo[0].write(servo_released[0]);
-  if (hapticLimits[1] > 0) servo[1].write(servo_fixed[1]);
-  else servo[1].write(servo_released[1]);
-  if (hapticLimits[2] > 0) servo[2].write(servo_fixed[2]);
-  else servo[2].write(servo_released[2]);
-  if (hapticLimits[3] > 0) servo[3].write(servo_fixed[3]);
-  else servo[3].write(servo_released[3]);
-  if (hapticLimits[4] > 0) servo[4].write(servo_fixed[4]);
-  else servo[4].write(servo_released[4]);
+  if (hapticLimits[0] > 0) {
+    servo[0].write(servo_fixed[0]);
+    digitalWrite(PIN_LED[0],1);
+  }
+  else {
+    servo[0].write(servo_released[0]);
+    digitalWrite(PIN_LED[0],0);
+  }
+  if (hapticLimits[1] > 0) {
+    servo[1].write(servo_fixed[1]);
+    digitalWrite(PIN_LED[1],1);
+  }
+  else {
+    servo[1].write(servo_released[1]);
+    digitalWrite(PIN_LED[1],0);
+  }
+  if (hapticLimits[2] > 0) {
+    servo[2].write(servo_fixed[2]);
+    digitalWrite(PIN_LED[2],1);
+  }
+  else {
+    servo[2].write(servo_released[2]);
+    digitalWrite(PIN_LED[2],0);
+  }
+  if (hapticLimits[3] > 0) {
+    servo[3].write(servo_fixed[3]);
+  }
+  else {
+    servo[3].write(servo_released[3]);
+  }
+  if (hapticLimits[4] > 0) {
+    servo[4].write(servo_fixed[4]);
+  }
+  else {
+    servo[4].write(servo_released[4]);
+  }
 }
 
 //static scaling, maps to entire range of servo

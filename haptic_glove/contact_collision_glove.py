@@ -52,6 +52,8 @@ col_finger_value = [INI_0_INT for i in range(5)]
 past_finger_value = [[INI_0_INT for i in range(10)] for i in range(15)]
 iteration = INI_0_INT
 
+imu_value = [INI_0_FLOAT for i in range(3)]
+
 def getSerialOrNone(portname):
   try:
     return serial.Serial(port=portname,
@@ -470,8 +472,9 @@ def main():
                 # keyboard input
                 key = p.getKeyboardEvents()
                 # print(key)
+                hand_po = p.getBasePositionAndOrientation(hand)
+                ho = p.getQuaternionFromEuler(imu_value)
                 for k in key.keys():
-                    hand_po = p.getBasePositionAndOrientation(hand)
                     if k == 65296: #left 
                         p.changeConstraint(hand_cid,(hand_po[0][0]+move,hand_po[0][1],hand_po[0][2]),ho, )
                     elif k == 65295: #right        
@@ -484,6 +487,7 @@ def main():
                         p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]+move),ho, )            
                     elif k == 46: #> 5 key           
                         p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]-move),ho, )
+                p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho, )
                 
                 if ser.inWaiting():
                     # read serial data from esp32
@@ -497,9 +501,12 @@ def main():
                         read_value_string_sliced = read_value_string[2:-1]
                         words = read_value_string_sliced.split(',')
                         # print(words)
-                        for i in range(len(words)):
+                        for i in range(12):
                             finger_value[i] = int(words[i])
+                        for i in range(3):
+                            imu_value[i] = float(words[12+i])*pi/180
                         # print(finger_value)
+                        print(imu_value)
                         if (len(finger_value) == 15):
                             # print(finger_value)
                             # print(p.getBasePositionAndOrientation(hand, physicsClientId=gui_id)[0])
