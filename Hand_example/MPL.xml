@@ -20,7 +20,7 @@
     -->
     
     <compiler angle="radian" meshdir="mesh/" texturedir="texture/"/>
-    <option timestep="0.002" iterations="50" apirate="50"/>
+    <option timestep="0.001" iterations="50" apirate="50"/>
     <size njmax="600" nconmax="150" nstack="300000"/>
 
     <default>

@@ -21,13 +21,22 @@ else:
 # CONSTANT
 INI_0_FLOAT = 0.0
 INI_0_INT = 0
-TIMESTEP = 1.0 / 60
+# TIMESTEP = 1.0 / 60
+TIMESTEP = 0.001
+MAX_ANGLE = 90
+MIN_ANGLE = 0
 
-INI_FINGER_VALUE = [0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0]
+INI_FINGER_VALUE = [0, -30, -30,
+                    -30, -115, -130,
+                    -30, -100, -85,
+                    -30, -30, -30,
+                    -30, -30, -30]
+
+# INI_FINGER_VALUE = [-10, -30, -30,
+#                     -30, -30, -30,
+#                     -30, -30, -30,
+#                     -30, -30, -30,
+#                     -30, -30, -30]
 
 # tinyForce= 2*10e-7
 tinyForce= 20
@@ -50,9 +59,9 @@ thumbId = 4
 finger_value = [INI_0_INT for i in range(15)]
 col_finger_value = [INI_0_INT for i in range(5)]
 past_finger_value = [[INI_0_INT for i in range(10)] for i in range(15)]
-iteration = INI_0_INT
 
 imu_value = [INI_0_FLOAT for i in range(3)]
+past_imu_value = [[INI_0_FLOAT for i in range(5)] for i in range(3)]
 
 def getSerialOrNone(portname):
   try:
@@ -82,6 +91,12 @@ def convertSensor(x, fingerIndex):
     v = maxV
   b = (v - minV) / float(maxV - minV)
   return (b)
+
+def mapping(val, max, min):
+    v = float(val)
+
+    b = (v - min) / (max - min) * (MAX_ANGLE - MIN_ANGLE) + MIN_ANGLE
+    return (b)
 
 def get_key_pressed():
         pressed_keys = []
@@ -147,7 +162,7 @@ def load_environment(client_id):
     hand = hand_id[0]
     hand_cid = p.createConstraint(hand,-1,-1,-1,p.JOINT_FIXED,[0,0,0],[0,0,0],[0,0,1], physicsClientId=client_id)
     hand_po = p.getBasePositionAndOrientation(hand, physicsClientId=client_id)
-    ho = p.getQuaternionFromEuler([0.0, 0.0, pi], physicsClientId=client_id)
+    ho = p.getQuaternionFromEuler(imu_value, physicsClientId=client_id)
     p.changeConstraint(hand_cid,(0.0156,-0.365,0.242),ho, physicsClientId=client_id)
     robot = pyb_utils.Robot(hand, client_id=client_id)
 
@@ -193,7 +208,7 @@ def read_robot_params_gui(robot_params_gui, client_id):
 
 
 def main():
-    iteration = INI_0_INT
+    iteration = [INI_0_INT for i in range(2)]
 
     # main simulation server, with a GUI
     gui_id = p.connect(p.GUI)
@@ -398,8 +413,6 @@ def main():
                 #     # print(f"Pinky to obstacles = {dists5}")
                 #     last_dists = dists5
 
-                time.sleep(TIMESTEP)
-
                 # contact detection
                 for count in range(0,len(CollisionLoadList),1):
                     cont_pts =p.getContactPoints(hand,CollisionLoadList[count])
@@ -463,7 +476,9 @@ def main():
                                 textSize=2,
                                 lifeTime=0.2,
                                 )
+                    # p.resetBasePositionAndOrientation(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho,)
 
+                            
                      
 
                 else:
@@ -474,6 +489,7 @@ def main():
                 # print(key)
                 hand_po = p.getBasePositionAndOrientation(hand)
                 ho = p.getQuaternionFromEuler(imu_value)
+                p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho, )
                 for k in key.keys():
                     if k == 65296: #left 
                         p.changeConstraint(hand_cid,(hand_po[0][0]+move,hand_po[0][1],hand_po[0][2]),ho, )
@@ -487,7 +503,6 @@ def main():
                         p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]+move),ho, )            
                     elif k == 46: #> 5 key           
                         p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]-move),ho, )
-                p.changeConstraint(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho, )
                 
                 if ser.inWaiting():
                     # read serial data from esp32
@@ -503,10 +518,11 @@ def main():
                         # print(words)
                         for i in range(12):
                             finger_value[i] = int(words[i])
+                            # finger_value[i] = 0
                         for i in range(3):
                             imu_value[i] = float(words[12+i])*pi/180
                         # print(finger_value)
-                        print(imu_value)
+                        # print(imu_value)
                         if (len(finger_value) == 15):
                             # print(finger_value)
                             # print(p.getBasePositionAndOrientation(hand, physicsClientId=gui_id)[0])
@@ -517,11 +533,11 @@ def main():
                             # index = convertSensor(finger_value[3], indexId)
                             # thumb = convertSensor(finger_value[4], thumbId)
 
-                            # filtering value
-                            if iteration == 10:
+                            # filtering finger value
+                            if iteration[0] == 10:
                                 for i in range(15):
                                     for j in range(10-1):
-                                        past_finger_value[i][j] = past_finger_value[i][j+1]
+                                        past_finger_value[i][j+1] = past_finger_value[i][j]
                                     if abs(finger_value[i]-past_finger_value[i][9]) > 20:
                                         finger_value[i] = past_finger_value[i][9]
                                     past_finger_value[i][0] = finger_value[i]
@@ -530,8 +546,8 @@ def main():
                                 
                             else:
                                 for i in range(15):
-                                    past_finger_value[i][iteration] = finger_value[i]
-                                iteration += 1
+                                    past_finger_value[i][iteration[0]] = finger_value[i]
+                                iteration[0] += 1
                             print(finger_value)
                             
                             #others
@@ -548,16 +564,16 @@ def main():
                             # p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, radians(30.0))
                             # p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, radians(30.0))
                             #index
-                            p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians(finger_value[3]-INI_FINGER_VALUE[3]))
-                            p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(finger_value[4]-INI_FINGER_VALUE[4]))
-                            p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(finger_value[5]-INI_FINGER_VALUE[5]))
+                            p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians((finger_value[3]-INI_FINGER_VALUE[3])))
+                            p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(mapping((finger_value[4]-INI_FINGER_VALUE[4]),50,0)))
+                            p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(mapping((finger_value[5]-INI_FINGER_VALUE[5]),50,0)))
                             # p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians(30.0))
                             # p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(30.0))
                             # p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(30.0))
                             #middle
                             p.setJointMotorControl2(hand, 25, p.POSITION_CONTROL, radians(finger_value[6]-INI_FINGER_VALUE[6]))
-                            p.setJointMotorControl2(hand, 27, p.POSITION_CONTROL, radians(finger_value[7]-INI_FINGER_VALUE[7]))
-                            p.setJointMotorControl2(hand, 29, p.POSITION_CONTROL, radians(finger_value[8]-INI_FINGER_VALUE[8]))
+                            p.setJointMotorControl2(hand, 27, p.POSITION_CONTROL, radians(mapping((finger_value[7]-INI_FINGER_VALUE[7]),30,0)))
+                            p.setJointMotorControl2(hand, 29, p.POSITION_CONTROL, radians(mapping((finger_value[8]-INI_FINGER_VALUE[8]),35,0)))
                             # p.setJointMotorControl2(hand, 25, p.POSITION_CONTROL, radians(30.0))
                             # p.setJointMotorControl2(hand, 27, p.POSITION_CONTROL, radians(30.0))
                             # p.setJointMotorControl2(hand, 29, p.POSITION_CONTROL, radians(30.0))
@@ -580,6 +596,23 @@ def main():
                             # print(pink)
                             # print(index)
                             # print(thumb)
+
+                        # filtering imu value
+                            if iteration[1] == 5:
+                                for i in range(3):
+                                    for j in range(5-1):
+                                        past_imu_value[i][j+1] = past_imu_value[i][j]
+                                    if abs(imu_value[i]-past_imu_value[i][4]) > 0.5:
+                                        imu_value[i] = past_imu_value[i][4]
+                                    past_imu_value[i][0] = imu_value[i]
+                                    imu_value[i] = sum(past_imu_value[i])/5
+                                    
+                                    
+                            else:
+                                for i in range(3):
+                                    past_imu_value[i][iteration[1]] = imu_value[i]
+                                iteration[1] += 1
+                            print(imu_value)  
             
                     # i = 1
                     # # sending collision bool to esp32
@@ -605,7 +638,9 @@ def main():
                                                             e=col_finger_value[4])
                     print(msg)
                     ser.write(msg.encode('utf-8'))
-                    time.sleep(0.01)
+                # time.sleep(TIMESTEP)
+                time.sleep(0.01)
+
                 
         except KeyboardInterrupt:
             print(KeyboardInterrupt)
