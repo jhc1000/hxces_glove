@@ -51,12 +51,12 @@ unsigned long timeout = 20;
 
 #define USING_FORCE_FEEDBACK true
 int hapticLimits[5] = {0,0,0,0,0};
-int servo_fixed[5] = {30,30,30,30,30};
+int servo_fixed[5] = {60,60,60,30,30};
 int servo_released[5] = {0,0,0,0,0};
 
 // [PIN]
 const int PIN_SERVO[5] = {36,38,40,42,1};
-const int PIN_FINGER[12] = {13,12,10,9};
+const int PIN_FINGER[6] = {13,12,10,9,18,17};
 const int PIN_ENC_SERVO[5] = {35,37};
 const int PIN_LED[3] = {6,5,4};
 
@@ -180,7 +180,7 @@ char* encode(int* flexion) {
   static char stringToEncode[sizeof(MAXENCODE)];
   flexion[14] = 0;
   sprintf(stringToEncode, "A,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f\n",
-          flexion[14], flexion[14], flexion[14], flexion[14], -flexion[0], -flexion[1], 
+          -flexion[14], -flexion[4], -flexion[5], flexion[14], -flexion[0], -flexion[1], 
           flexion[14], -flexion[2], -flexion[3], flexion[14], flexion[14], flexion[14], 
           euler[0], euler[1], euler[2]);
   return stringToEncode;
@@ -205,7 +205,7 @@ int getArgument(char* stringToDecode, char command) {
 }
 
 void setupInputs() {
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 5; i++) {
     pinMode(PIN_FINGER[i], INPUT);
   }
   for (int i = 0; i < 2; i++) {
@@ -260,7 +260,7 @@ void setServos(int degrees) {
 
 int* getFingerPositions(bool calibrating, bool reset) {
   static int raw_finger_value[15];
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 6; i++) {
     raw_finger_value[i] = map(analogRead(PIN_FINGER[i]), 0, ANALOG_MAX, ANGLE_MIN, ANGLE_MAX);
     // raw_finger_value[i] = analogRead(PIN_FINGER[i]);
     // Serial.print(raw_finger_value[i]);

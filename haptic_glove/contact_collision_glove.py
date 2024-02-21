@@ -26,12 +26,14 @@ TIMESTEP = 0.001
 MAX_ANGLE = 90
 MIN_ANGLE = 0
 
-INI_FINGER_VALUE = [0, -30, -30,
-                    -30, -115, -130,
-                    -30, -100, -85,
-                    -30, -30, -30,
-                    -30, -30, -30]
+INI_FINGER_VALUE = [-30, -130, -38,
+                    -30, -120, -130,
+                    -30, -130, -80,
+                    -80, -90, -30,
+                    -80, -90, -30]
 
+# 96 1 53 96 56 35
+# 34 37 67 34 74 45
 # INI_FINGER_VALUE = [-10, -30, -30,
 #                     -30, -30, -30,
 #                     -30, -30, -30,
@@ -61,7 +63,7 @@ col_finger_value = [INI_0_INT for i in range(5)]
 past_finger_value = [[INI_0_INT for i in range(10)] for i in range(15)]
 
 imu_value = [INI_0_FLOAT for i in range(3)]
-past_imu_value = [[INI_0_FLOAT for i in range(5)] for i in range(3)]
+past_imu_value = [[INI_0_FLOAT for i in range(8)] for i in range(3)]
 
 def getSerialOrNone(portname):
   try:
@@ -138,7 +140,7 @@ def load_environment(client_id):
         cameraDistance=1,
         cameraYaw=-90,
         cameraPitch=-10,
-        cameraTargetPosition=[0,-0.2,0.0]
+        cameraTargetPosition=[0,-0.2,0.2]
     )
 
     # ground plane
@@ -433,7 +435,7 @@ def main():
                                 "Thumb collision",
                                 textPosition=[0, 0, 0.275],
                                 textColorRGB=[255, 0, 0],
-                                textSize=2,
+                                textSize=3,
                                 lifeTime=0.2,
                                 )
 
@@ -443,7 +445,7 @@ def main():
                             "Index collision",
                             textPosition=[0, 0, 0.25],
                             textColorRGB=[255, 0, 0],
-                            textSize=2,
+                            textSize=3,
                             lifeTime=0.2,
                             )
 
@@ -453,7 +455,7 @@ def main():
                                 "Middle collision",
                                 textPosition=[0, 0, 0.225],
                                 textColorRGB=[255, 0, 0],
-                                textSize=2,
+                                textSize=3,
                                 lifeTime=0.2,
                                 )
 
@@ -463,7 +465,7 @@ def main():
                                 "Ring collision",
                                 textPosition=[0, 0, 0.2],
                                 textColorRGB=[255, 0, 0],
-                                textSize=2,
+                                textSize=3,
                                 lifeTime=0.2,
                                 )
 
@@ -473,7 +475,7 @@ def main():
                                 "Pinky collision",
                                 textPosition=[0, 0, 0.175],
                                 textColorRGB=[255, 0, 0],
-                                textSize=2,
+                                textSize=3,
                                 lifeTime=0.2,
                                 )
                     # p.resetBasePositionAndOrientation(hand_cid,(hand_po[0][0],hand_po[0][1],hand_po[0][2]),ho,)
@@ -520,7 +522,8 @@ def main():
                             finger_value[i] = int(words[i])
                             # finger_value[i] = 0
                         for i in range(3):
-                            imu_value[i] = float(words[12+i])*pi/180
+                            imu_value[i] = -1.0*float(words[12+i])*pi/180
+                        imu_value[1] = -1.0*imu_value[1]
                         # print(finger_value)
                         # print(imu_value)
                         if (len(finger_value) == 15):
@@ -555,25 +558,29 @@ def main():
                             for count in range(p.getNumJoints(hand)):
                                 p.setJointMotorControl2(hand, count, p.POSITION_CONTROL, 0.0)
 
+                            # 34 37 67 34 74 45
                             #thumb
                             p.setJointMotorControl2(hand, 7, p.POSITION_CONTROL, pi/2)
-                            p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, radians(finger_value[0]-INI_FINGER_VALUE[0]))
-                            p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, radians(finger_value[1]-INI_FINGER_VALUE[1]))
-                            p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, radians(finger_value[2]-INI_FINGER_VALUE[2]))
+                            # p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, radians(finger_value[0]-INI_FINGER_VALUE[0]))
+                            p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, radians(mapping((finger_value[1]-INI_FINGER_VALUE[1]),34,0)/2.0))
+                            p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, radians(mapping((finger_value[1]-INI_FINGER_VALUE[1]),34,0)))
+                            p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, radians(mapping((finger_value[2]-INI_FINGER_VALUE[2]),37,0)))
                             # p.setJointMotorControl2(hand, 9, p.POSITION_CONTROL, radians(30.0))
                             # p.setJointMotorControl2(hand, 11, p.POSITION_CONTROL, radians(30.0))
                             # p.setJointMotorControl2(hand, 13, p.POSITION_CONTROL, radians(30.0))
                             #index
-                            p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians((finger_value[3]-INI_FINGER_VALUE[3])))
-                            p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(mapping((finger_value[4]-INI_FINGER_VALUE[4]),50,0)))
-                            p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(mapping((finger_value[5]-INI_FINGER_VALUE[5]),50,0)))
+                            # p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians((finger_value[3]-INI_FINGER_VALUE[3])))
+                            p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians(mapping((finger_value[4]-INI_FINGER_VALUE[4]),67,0)))
+                            p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(mapping((finger_value[4]-INI_FINGER_VALUE[4]),67,0)))
+                            p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(mapping((finger_value[5]-INI_FINGER_VALUE[5]),34,0)))
                             # p.setJointMotorControl2(hand, 17, p.POSITION_CONTROL, radians(30.0))
                             # p.setJointMotorControl2(hand, 19, p.POSITION_CONTROL, radians(30.0))
                             # p.setJointMotorControl2(hand, 21, p.POSITION_CONTROL, radians(30.0))
                             #middle
-                            p.setJointMotorControl2(hand, 25, p.POSITION_CONTROL, radians(finger_value[6]-INI_FINGER_VALUE[6]))
-                            p.setJointMotorControl2(hand, 27, p.POSITION_CONTROL, radians(mapping((finger_value[7]-INI_FINGER_VALUE[7]),30,0)))
-                            p.setJointMotorControl2(hand, 29, p.POSITION_CONTROL, radians(mapping((finger_value[8]-INI_FINGER_VALUE[8]),35,0)))
+                            # p.setJointMotorControl2(hand, 25, p.POSITION_CONTROL, radians(finger_value[6]-INI_FINGER_VALUE[6]))
+                            p.setJointMotorControl2(hand, 25, p.POSITION_CONTROL, radians(mapping((finger_value[7]-INI_FINGER_VALUE[7]),74,0)))
+                            p.setJointMotorControl2(hand, 27, p.POSITION_CONTROL, radians(mapping((finger_value[7]-INI_FINGER_VALUE[7]),74,0)))
+                            p.setJointMotorControl2(hand, 29, p.POSITION_CONTROL, radians(mapping((finger_value[8]-INI_FINGER_VALUE[8]),45,0)))
                             # p.setJointMotorControl2(hand, 25, p.POSITION_CONTROL, radians(30.0))
                             # p.setJointMotorControl2(hand, 27, p.POSITION_CONTROL, radians(30.0))
                             # p.setJointMotorControl2(hand, 29, p.POSITION_CONTROL, radians(30.0))
@@ -598,14 +605,14 @@ def main():
                             # print(thumb)
 
                         # filtering imu value
-                            if iteration[1] == 5:
+                            if iteration[1] == 8:
                                 for i in range(3):
-                                    for j in range(5-1):
+                                    for j in range(8-1):
                                         past_imu_value[i][j+1] = past_imu_value[i][j]
-                                    if abs(imu_value[i]-past_imu_value[i][4]) > 0.5:
-                                        imu_value[i] = past_imu_value[i][4]
+                                    if abs(imu_value[i]-past_imu_value[i][7]) > 0.75:
+                                        imu_value[i] = past_imu_value[i][7]
                                     past_imu_value[i][0] = imu_value[i]
-                                    imu_value[i] = sum(past_imu_value[i])/5
+                                    imu_value[i] = sum(past_imu_value[i])/8
                                     
                                     
                             else:
@@ -630,7 +637,8 @@ def main():
                     #     ser.write(msg.encode('utf-8'))
                     #     time.sleep(0.01)
                     # time.sleep(0.1)
-
+                    col_finger_value[1] = 1
+                    
                     msg = 'A{a}B{b}C{c}D{d}E{e}\n'.format(a=col_finger_value[0],
                                                             b=col_finger_value[1],
                                                             c=col_finger_value[2],
