@@ -637,7 +637,9 @@ def main():
                     #     ser.write(msg.encode('utf-8'))
                     #     time.sleep(0.01)
                     # time.sleep(0.1)
-                    col_finger_value[1] = 1
+
+                    # for test code    
+                    # col_finger_value[1] = 1
                     
                     msg = 'A{a}B{b}C{c}D{d}E{e}\n'.format(a=col_finger_value[0],
                                                             b=col_finger_value[1],
